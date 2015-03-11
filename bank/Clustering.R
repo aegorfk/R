@@ -2,8 +2,10 @@ Sys.setenv(LANG = "en")
 
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE,  header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
+
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 for (i in 2:6) bankruptcy[,i] <- 1/(1+(exp(-1*bankruptcy[,i])))
+pairs(~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов,data=bankruptcy,  main="Scatterplot Matrix")
 
 bankruptcy$Банкрот <- NULL
 bankruptcy_15 <- bankruptcy[sample(1:nrow(bankruptcy), 38, replace=FALSE),]
@@ -24,7 +26,5 @@ library("devtools")
 #install_github("rCharts","ramnathv")
 library("rCharts")
 
-gplot <- nPlot(Ликвидность.активов ~  Рентабельность.активов, group = 'cluster', 
-               data = bankruptcy_85, type = 'scatterChart',
-               tooltip = "function(item) {return 'hi'}")
+gplot <- nPlot(Ликвидность.активов ~  Рентабельность.активов, group = 'cluster', data = bankruptcy_85, type = 'scatterChart', tooltip = "function(item) {return 'hi'}")
 gplot

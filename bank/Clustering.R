@@ -17,7 +17,6 @@ pairs(~ Ликвидность.активов + Рентабельность.а�
 plot3d(x = bankruptcy$Ликвидность.активов, y = bankruptcy$Рентабельность.активов, z = bankruptcy$Доходность.активов)
 
 bankruptcy$Банкрот <- NULL
-bankruptcy[,1] <- NULL
 bankruptcy2$ID  <- NULL
 bankruptcy2$Ликвидность.активов  <- NULL
 bankruptcy2$Рентабельность.активов  <- NULL
@@ -34,5 +33,5 @@ bank_kmeans <- kmeans(bankruptcy, centers=2, iter.max=10, nstart = 210)
 bankruptcy$cluster <- factor(bank_kmeans$cluster)
 
 
-gplot <- nPlot(Ликвидность.активов ~  Рентабельность.активов, group = 'cluster', data = bankruptcy_85, type = 'scatterChart', tooltip = "function(item) {return 'hi'}")
+gplot <- nPlot(bankruptcy$cluster ~  bankruptcy2$Банкрот, group = 'cluster', data = bankruptcy_85, type = 'scatterChart', tooltip = "function(item) {return 'hi'}")
 gplot

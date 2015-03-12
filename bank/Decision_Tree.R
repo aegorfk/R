@@ -7,29 +7,26 @@ library("tree")
 
 
 
-bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, fileEncoding = "UTF8", header=TRUE, sep=";")
+bankruptcy <- read.csv(file="РџСЂРµРґРїСЂРёСЏС‚РёСЏ-Рђ.csv",stringsAsFactors = FALSE, fileEncoding = "UTF8", header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 
-Банкротство <- ifelse(bankruptcy$Банкрот == 1, "Да", "Нет" )
-bankruptcy <- data.frame(bankruptcy, Банкротство)
-bankruptcy$Банкрот <- NULL
+Р‘Р°РЅРєСЂРѕС‚СЃС‚РІРѕ <- ifelse(bankruptcy$Р‘Р°РЅРєСЂРѕС‚ == 1, "Р”Р°", "РќРµС‚" )
+bankruptcy <- data.frame(bankruptcy, Р‘Р°РЅРєСЂРѕС‚СЃС‚РІРѕ)
+bankruptcy$Р‘Р°РЅРєСЂРѕС‚ <- NULL
 
-range(bankruptcy$Ликвидность.активов)
-Ликвидность <- ifelse(bankruptcy$Ликвидность.активов >=0.5, "Высокая", "Низкая " )
-bankruptcy <- data.frame(bankruptcy,Ликвидность)
-bankruptcy$Ликвидность.активов <- NULL
+range(bankruptcy$Р›РёРєРІРёРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ)
+Р›РёРєРІРёРґРЅРѕСЃС‚СЊ <- ifelse(bankruptcy$Р›РёРєРІРёРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ >=0.5, "Р’С‹СЃРѕРєР°СЏ", "РќРёР·РєР°СЏ " )
+bankruptcy <- data.frame(bankruptcy,Р›РёРєРІРёРґРЅРѕСЃС‚СЊ)
+bankruptcy$Р›РёРєРІРёРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ <- NULL
 
-range(bankruptcy$Рентабельность.активов)
-test_func <- function(rent) { if (rent <= -3.5) "Низкая" else if (rent <= -2) "Средняя" else if (rent >= -2) "Высокая"}
-lapply(bankruptcy$Рентабельность.активов, function(bankruptcy$Рентабельность.активов))
+range(bankruptcy$Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ)
+test_func <- function(rent) { if (rent <= -3.5) return("РќРёР·РєР°СЏ") else if (rent <= -2) return("РЎСЂРµРґРЅСЏСЏ") else if (rent >= -2) return("Р’С‹СЃРѕРєР°СЏ")}
+bankruptcy$Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ <- lapply(bankruptcy$Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ, test_func)
 
-bankruptcy <- data.frame(bankruptcy,Рентабельность)
-bankruptcy$Рентабельность.активов <- NULL
-
-range(bankruptcy$Доходность.активов)
-range(bankruptcy$Автономность)
-range(bankruptcy$Оборачиваемость.активов)
+range(bankruptcy$Р”РѕС…РѕРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ)
+range(bankruptcy$РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ)
+range(bankruptcy$РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ)
 
 
 set.seed(2)
@@ -37,7 +34,7 @@ train = sample(1:nrow(bankruptcy), nrow(bankruptcy)/3)
 test = - train
 bankruptcy_training_data = bankruptcy[train,]
 bankruptcy_testing_data = bankruptcy[test,]
-bankruptcy_testing_Bankruptcy = Bankruptcy[test]
+bankruptcy_testing_Bankruptcy = bankruptcy[test]
 
 #training
 
@@ -51,7 +48,7 @@ mean(tree_pred_bankruptcy != bankruptcy_testing_Bankruptcy)
 set.seed(3)
 cv_tree <- cv.tree(tree_model_bankruptcy, FUN = prune.misclass)
 plot(cv_tree$size,cv_tree$dev, type = "b")
-pruned_model_bankruptcy <- prune.misclass(tree_model_bankruptcy, best = 4) #взяли с графика 9
+pruned_model_bankruptcy <- prune.misclass(tree_model_bankruptcy, best = 4) #РІР·СЏР»Рё СЃ РіСЂР°С„РёРєР° 9
 plot(pruned_model_bankruptcy)
 text(pruned_model_bankruptcy, pretty=0)
 tree_pred_bankruptcy = predict(pruned_model_bankruptcy, testing_data_bankruptcy, type="class")

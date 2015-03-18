@@ -38,6 +38,13 @@ library("car")
 library("lmtest")
 #install.packages("outliers", dependencies = TRUE)
 library("outliers")
+#install.packages("MASS", dependencies = TRUE)
+library("MASS")
+#install.packages("corrgram", dependencies = TRUE)
+library("corrgram")
+
+
+
 
 
 #Считаем данные из файла:
@@ -129,8 +136,6 @@ corrgram(x, order=NULL, lower.panel=panel.shade,  upper.panel=NULL, main="Визуал
 
 
 
-
-
 #Для последующей проверки модели мы разделили все имеющиеся данные в соотношении 85:15. То есть тестовыми данными мы сделаем 2 609 записей. Выберем их случайным образом из нашей выборки, пользуясь индексацией по переменной instanse (есть в исходных данных).
 
 Bikes_15 <- Bikes[sample(1:nrow(Bikes), 2609, replace=FALSE),]
@@ -204,11 +209,47 @@ plot(Bikes_85$resid3, col=Bikes_85$Outs+1, pch=16)
 
 #Идентификатор
 mad <- mad(Bikes_85$resid2)
-
-Bikes_85$Outs<-ifelse(Bikes_85$resid2<median-3*mad & Bikes_85$resid2>median+3*mad,1,0)
+median <- median(Bikes_85$resid2)
+Bikes_85$Outs<-ifelse(Bikes_85$resid2>median+3*mad | Bikes_85$resid2<median-3*mad, 1, 0)
 plot(Bikes_85$resid2, col=Bikes_85$Outs+1, pch=16)
 
+# С помощью диаграммы Бокса - Вискера, можно определить 5 участков с похожей скоростью роста показателя cnt. 
+#На основании этих данных, переменная “час дня” была разделена на следующие пять групп:
+# 0 - ночь ( с 22 до 5)
+# 1 - утро (с 5 до 9)
+# 2 - полдень ( с 9 до 12)
+# 3 - день ( с 12 до 16)
+# 4 - вечер ( с 16 до 22)
+hr_factor <- function(time) { if (time > 22 || time < 5) return(0)  else if (time >= 5 && time < 9) return(1)   else if (time >= 9 && time <= 12) return(2)   else if (time > 12 && time <= 16) return(3)   else if (time > 16) return(4)}
+Bikes_85$newHr <- lapply(Bikes_85$hr, hr_factor)
+Bikes_15$newHr <- lapply(Bikes_15$hr, hr_factor)
+Bikes_15$newHr <- unlist(Bikes_15$newHr)
+Bikes_85$newHr <- unlist(Bikes_85$newHr)
 
-#Очистим память от ненужных переменных:
-rm(x, )
+Bikes_reg_85 <- step(lm(cnt ~ temp + hum + factor(newHr) + factor(season) + factor(weathersit), data = Bikes_85))
+#Построим наилучшую робастную регрессию и выведем ее основные характеристики: 
+# Теперь, давайте построим эту же модель, но в этот раз используя 
+# функцию bisquare (“Метод наименьших квадратов” с весовыми коэффициентами) взвешивания.
+Bikes_reg_85.bisquare <- rlm(cnt ~ temp +I(temp^2)+ hum + I(hum^2) + I(hum*temp) + factor(newHr) + factor(season) + factor(weathersit), data=Bikes_85, psi = psi.bisquare)
+summary(Bikes_reg_85.bisquare)
+
+#Прогнозирование робастной модели
+rob_predicted <- predict(Bikes_reg_85.bisquare, Bikes_15)
+
+#Прогнозирование линейной модели
+lm_predicted <- predict(Bikes_reg_85, Bikes_15)
+
+lm_actuals_pred <- cbind(lm_predicted, Bikes_15$cnt)
+rob_actuals_pred <- cbind(rob_predicted, Bikes_15$cnt)
+
+
+mean(apply(lm_actuals_pred, 1, min)/ apply(lm_actuals_pred, 1, max))
+
+mean(apply(rob_actuals_pred, 1, min)/ apply(rob_actuals_pred, 1, max))
+
+
+
+
+
+
 

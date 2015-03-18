@@ -91,30 +91,30 @@ boxplot(cnt ~ season, data = Bikes,  xlab = "Сезон (весна, лето, осень, зима)", 
 corstarsl <- function(x)
   { 
 #Исходная матрица
-  x <- as.matrix(x) 
-  R <- rcorr(x)$r 
-  p <- rcorr(x)$P 
+x <- as.matrix(x) 
+R <- rcorr(x)$r 
+p <- rcorr(x)$P 
   
 #задание уровней значимости. 
-  mystars <- ifelse(p < .001, "***", ifelse(p < .01, "** ", ifelse(p < .05, "* ", " ")))
+mystars <- ifelse(p < .001, "***", ifelse(p < .01, "** ", ifelse(p < .05, "* ", " ")))
   
 #Округление значений матрицы до 2 знаков после запятой
-  R <- format(round(cbind(rep(-1.11, ncol(x)), R), 2))[,-1] 
+R <- format(round(cbind(rep(-1.11, ncol(x)), R), 2))[,-1] 
   
 #Построение матрицы со значениями корреляции и уровнями значимости
-  Rnew <- matrix(paste(R, mystars, sep=""), ncol=ncol(x)) 
-  diag(Rnew) <- paste(diag(R), " ", sep="") 
-  rownames(Rnew) <- colnames(x) 
-  colnames(Rnew) <- paste(colnames(x), "", sep="") 
+Rnew <- matrix(paste(R, mystars, sep=""), ncol=ncol(x)) 
+diag(Rnew) <- paste(diag(R), " ", sep="") 
+rownames(Rnew) <- colnames(x) 
+colnames(Rnew) <- paste(colnames(x), "", sep="") 
   
  #Удаление верхнего треугольника матрицы
-  Rnew <- as.matrix(Rnew)
-  Rnew[upper.tri(Rnew, diag = TRUE)] <- ""
-  Rnew <- as.data.frame(Rnew) 
+Rnew <- as.matrix(Rnew)
+Rnew[upper.tri(Rnew, diag = TRUE)] <- ""
+Rnew <- as.data.frame(Rnew) 
   
  #Удаление последней колонки ( так как она пуста ) и возврат готовой матрицы
-  Rnew <- cbind(Rnew[1:length(Rnew)-1])
-  return(Rnew) 
+Rnew <- cbind(Rnew[1:length(Rnew)-1])
+return(Rnew) 
 }
 
 #Выборка из 7 переменных для анализа взаимосвязей показателей с помощью матрицы Пирсона
@@ -202,8 +202,13 @@ sd3 <- 3*sd(resid(Bikes_reg_85))
 Bikes_85$Outs<-ifelse(abs(Bikes_85$resid3)>sd3, 1, 0)
 plot(Bikes_85$resid3, col=Bikes_85$Outs+1, pch=16)
 
-
+#Идентификатор
 mad <- mad(Bikes_85$resid2)
-Bikes_85$Outs<-ifelse(res<median-mad & res>median+mad,1,0)
+
+Bikes_85$Outs<-ifelse(Bikes_85$resid2<median-3*mad & Bikes_85$resid2>median+3*mad,1,0)
 plot(Bikes_85$resid2, col=Bikes_85$Outs+1, pch=16)
+
+
+#Очистим память от ненужных переменных:
+rm(x, )
 

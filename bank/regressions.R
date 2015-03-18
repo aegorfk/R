@@ -1,3 +1,7 @@
+# if you see KRAKOZYABRY then do 
+# "File" - "Reopen with encoding" - "UTF-8" - (Set as default) - OK
+
+
 Sys.setenv(LANG = "en")
 #install.packages("ggplot2")
 library(ggplot2)
@@ -6,8 +10,9 @@ library("MASS")
 #install.packages("epicalc", dependencies=TRUE)
 library("epicalc")
 
+
 #считываем данные из файла
-bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, fileEncoding = "UTF8", header=TRUE, sep=";")
+bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 

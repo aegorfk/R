@@ -15,6 +15,11 @@ library("outliers")
 library("rpart")
 #install.packages("randomForest", dependencies = TRUE)
 library("randomForest")
+#install.packages("C50", dependencies = TRUE)
+library("C50")
+
+
+
 
 
 
@@ -25,8 +30,8 @@ library("randomForest")
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
-plot(bankruptcy$Банкрот, bankruptcy$Ликвидность.активов)
-rownames(testing_data)<-NULL
+
+
 
 #Посмотрим на наши данные
 summary(bankruptcy)
@@ -52,8 +57,8 @@ boxplot(Оборачиваемость.активов ~ Банкрот , data = bankruptcy, xlab = "Оборачива
 
 
 #сбалансированно бьем выборку на тестовую и проверочную
-ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID : Банкрот)
-ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID : Банкрот)
+ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
+ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
 sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
 sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
 
@@ -62,22 +67,22 @@ testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
 rownames(training_data)<-NULL
 rownames(testing_data)<-NULL
 rm(ind0, ind1, sampind0, sampind1, i)
-
+clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
 
 #строим логистическую регрессию, оказалось, что Автономность мало влияет на Банкротство
-glm.out = step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, family=binomial, data=training_data))
+glm.out <- step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, family=binomial, data=training_data))
 summary(glm.out)
 confint(glm.out)
 exp(glm.out$coefficients)
 exp(confint(glm.out))
 
 #Округлим полученные значения
-testing_data$predicted_value_log <-  predict(glm.out, newdata = testing_data, type = "response")
+testing_data$predicted_value_log <-  predict(glm.out, newdata = clear_test, type = "response")
 convert <- function(data){if(data >= 0.5)return (1) else return (0)}
 testing_data$predicted_value_log <- lapply(testing_data$predicted_value_log, convert)
 
 #Строим регрессионное дерево
-reg_tree <- rpart(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов + Автономность, data = testing_data, method = "anova")
+reg_tree <- rpart(Банкрот ~ ., data = clear_test, method = "anova")
 printcp(reg_tree)
 plotcp(reg_tree) # покажем график кросс-валидации
 summary(reg_tree) 
@@ -85,7 +90,8 @@ summary(reg_tree)
 rsq.rpart(reg_tree) # visualize cross-validation results    
 
 # plot tree 
-plot(reg_tree, uniform=TRUE, main="Дерево регрессии") + text(reg_tree, use.n=TRUE, all=TRUE, cex=.8)
+plot(reg_tree, uniform=TRUE, main="Дерево регрессии")
+text(reg_tree, use.n=TRUE, all=TRUE, cex=.8)
 
 #Тестим дерево
 testing_data$predicted_value_regtree <- predict(reg_tree,  testing_data, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
@@ -95,10 +101,20 @@ testing_data$predicted_value_regtree <- lapply(testing_data$predicted_value_regt
 
 
 #Метод random forests
-fit <- randomForest(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data=training_data)
+fit <- randomForest(Банкрот ~  ., data=clear_test)
 print(fit) # view results 
 importance(fit) # importance of each predictor
 
 #Тестим дерево
 testing_data$predicted_value_random <-predict(fit, testing_data, type="response" )
+
+
+#Алгоритм C.5.0
+reg_tree_c50 <- C5.0(x = training_data[, -6], y = training_data$Банкрот)
+testing_data$predicted_value_regtree50 <- predict(reg_tree_c50,  clear_test)
+summary(reg_tree_c50)
+
+
+
+
 

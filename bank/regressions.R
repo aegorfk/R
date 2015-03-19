@@ -3,14 +3,18 @@
 
 
 Sys.setenv(LANG = "en")
-#install.packages("ggplot2")
+#install.packages("ggplot2", dependencies=TRUE)
 library(ggplot2)
-#install.packages("MASS")
+#install.packages("MASS", dependencies=TRUE)
 library("MASS")
 #install.packages("epicalc", dependencies=TRUE)
 library("epicalc")
 #install.packages("outliers", dependencies = TRUE)
 library("outliers")
+#install.packages("rpart", dependencies = TRUE)
+library("rpart")
+
+
 
 
 
@@ -18,6 +22,7 @@ library("outliers")
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
+plot(bankruptcy$Банкрот, bankruptcy$Ликвидность.активов)
 
 #Посмотрим на наши данные
 summary(bankruptcy)
@@ -55,11 +60,34 @@ rownames(testing_data)<-NULL
 rm(ind0, ind1, sampind0, sampind1, i)
 
 
-#строим логистическую регрессию
-glm.out = step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов, family=binomial, data=training_data))
+#строим логистическую регрессию, оказалось, что Автономность мало влияет на Банкротство
+glm.out = step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, family=binomial, data=training_data))
 summary(glm.out)
+confint(glm.out)
+exp(glm.out$coefficients)
+exp(confint(glm.out))
 
-anova(glm.out, test="Chisq")
-testing_data$predicted_value <- predict(glm.out, newdata = testing_data, type = "response")
+#Округлим полученные значения
+testing_data$predicted_value <-  predict(glm.out, newdata = testing_data, type = "response")
+convert <- function(data){if(data >= 0.5)return (1) else return (0)}
+testing_data$predicted_value <- lapply(testing_data$predicted_value, convert)
 
+#Строим регрессионное дерево
+reg_tree <- rpart(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов + Автономность, data = testing_data, method = "anova")
+printcp(reg_tree)
+plotcp(reg_tree) # покажем график кросс-валидации
+summary(reg_tree) 
+
+rsq.rpart(reg_tree) # visualize cross-validation results    
+
+# plot tree 
+plot(reg_tree, uniform=TRUE, main="Дерево регрессии") + text(reg_tree, use.n=TRUE, all=TRUE, cex=.8)
+
+#Тестим дерево
+testing_data$predicted_value_regtree <- predict(reg_tree,  testing_data, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
+
+
+correct <- function(data){if(data >= 0.5)return (1) else return (0)}
+testing_data$predicted_value_regtree <- testing_data$predicted_value_regtree - 1
+testing_data$predicted_value_regtree <- lapply(testing_data$predicted_value_regtree, correct)
 

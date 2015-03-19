@@ -13,8 +13,8 @@ library("epicalc")
 library("outliers")
 #install.packages("rpart", dependencies = TRUE)
 library("rpart")
-
-
+#install.packages("randomForest", dependencies = TRUE)
+library("randomForest")
 
 
 
@@ -68,9 +68,9 @@ exp(glm.out$coefficients)
 exp(confint(glm.out))
 
 #Округлим полученные значения
-testing_data$predicted_value <-  predict(glm.out, newdata = testing_data, type = "response")
+testing_data$predicted_value_log <-  predict(glm.out, newdata = testing_data, type = "response")
 convert <- function(data){if(data >= 0.5)return (1) else return (0)}
-testing_data$predicted_value <- lapply(testing_data$predicted_value, convert)
+testing_data$predicted_value_log <- lapply(testing_data$predicted_value_log, convert)
 
 #Строим регрессионное дерево
 reg_tree <- rpart(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов + Автономность, data = testing_data, method = "anova")
@@ -85,9 +85,16 @@ plot(reg_tree, uniform=TRUE, main="Дерево регрессии") + text(reg_tree, use.n=TRU
 
 #Тестим дерево
 testing_data$predicted_value_regtree <- predict(reg_tree,  testing_data, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
-
-
 correct <- function(data){if(data >= 0.5)return (1) else return (0)}
 testing_data$predicted_value_regtree <- testing_data$predicted_value_regtree - 1
 testing_data$predicted_value_regtree <- lapply(testing_data$predicted_value_regtree, correct)
+
+
+#Метод random forests
+fit <- randomForest(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data=training_data)
+print(fit) # view results 
+importance(fit) # importance of each predictor
+
+#Тестим дерево
+testing_data$predicted_value_random <-predict(fit, testing_data, type="response" )
 

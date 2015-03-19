@@ -18,11 +18,15 @@ library("randomForest")
 
 
 
+
+
+
 #считываем данные из файла
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 plot(bankruptcy$Банкрот, bankruptcy$Ликвидность.активов)
+rownames(testing_data)<-NULL
 
 #Посмотрим на наши данные
 summary(bankruptcy)

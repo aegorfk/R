@@ -26,39 +26,39 @@ library("C50")
 
 
 
-#считываем данные из файла
-bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
+#СЃС‡РёС‚С‹РІР°РµРј РґР°РЅРЅС‹Рµ РёР· С„Р°Р№Р»Р°
+bankruptcy <- read.csv(file="РџСЂРµРґРїСЂРёСЏС‚РёСЏ-Рђ.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 
 
 
-#Посмотрим на наши данные
+#РџРѕСЃРјРѕС‚СЂРёРј РЅР° РЅР°С€Рё РґР°РЅРЅС‹Рµ
 summary(bankruptcy)
-boxplot(Ликвидность.активов ~ Банкрот , data = bankruptcy, xlab = "Ликвидность активов", ylab = "Банкрот", main = "Зависимость банкротства от ликвидности активов")
-boxplot(Рентабельность.активов ~ Банкрот , data = bankruptcy, xlab = "Рентабельность активов", ylab = "Банкрот", main = "Зависимость банкротства от рентабельности активов")
-boxplot(Доходность.активов ~ Банкрот , data = bankruptcy, xlab = "Доходность активов", ylab = "Банкрот", main = "Зависимость банкротства от доходности активов")
-boxplot(Автономность ~ Банкрот , data = bankruptcy, xlab = "Автономность", ylab = "Банкрот", main = "Зависимость банкротства от автономности активов")
-boxplot(Оборачиваемость.активов ~ Банкрот , data = bankruptcy, xlab = "Оборачиваемость.активов", ylab = "Банкрот", main = "Зависимость банкротства от оборачиваемости активов")
+boxplot(Р›РёРєРІРёРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "Р›РёРєРІРёРґРЅРѕСЃС‚СЊ Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ Р»РёРєРІРёРґРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ СЂРµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(Р”РѕС…РѕРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "Р”РѕС…РѕРґРЅРѕСЃС‚СЊ Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ РґРѕС…РѕРґРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ Р°РІС‚РѕРЅРѕРјРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ РѕР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
 
-bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ < 30 ), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Р”РѕС…РѕРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ < 10), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Р”РѕС…РѕРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ > -6), ]
 
-#Смотрим итоговую выборку
+#РЎРјРѕС‚СЂРёРј РёС‚РѕРіРѕРІСѓСЋ РІС‹Р±РѕСЂРєСѓ
 summary(bankruptcy)
-boxplot(Рентабельность.активов ~ Банкрот , data = bankruptcy, xlab = "Рентабельность активов", ylab = "Банкрот", main = "Зависимость банкротства от рентабельности активов")
-boxplot(Доходность.активов ~ Банкрот , data = bankruptcy, xlab = "Доходность активов", ylab = "Банкрот", main = "Зависимость банкротства от доходности активов")
-boxplot(Автономность ~ Банкрот , data = bankruptcy, xlab = "Автономность", ylab = "Банкрот", main = "Зависимость банкротства от автономности активов")
-boxplot(Оборачиваемость.активов ~ Банкрот , data = bankruptcy, xlab = "Оборачиваемость.активов", ylab = "Банкрот", main = "Зависимость банкротства от оборачиваемости активов")
+boxplot(Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ СЂРµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(Р”РѕС…РѕРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "Р”РѕС…РѕРґРЅРѕСЃС‚СЊ Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ РґРѕС…РѕРґРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ Р°РІС‚РѕРЅРѕРјРЅРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
+boxplot(РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ ~ Р‘Р°РЅРєСЂРѕС‚ , data = bankruptcy, xlab = "РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ", ylab = "Р‘Р°РЅРєСЂРѕС‚", main = "Р—Р°РІРёСЃРёРјРѕСЃС‚СЊ Р±Р°РЅРєСЂРѕС‚СЃС‚РІР° РѕС‚ РѕР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚Рё Р°РєС‚РёРІРѕРІ")
 
 
 
-#сбалансированно бьем выборку на тестовую и проверочную
-ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
-ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
+#СЃР±Р°Р»Р°РЅСЃРёСЂРѕРІР°РЅРЅРѕ Р±СЊРµРј РІС‹Р±РѕСЂРєСѓ РЅР° С‚РµСЃС‚РѕРІСѓСЋ Рё РїСЂРѕРІРµСЂРѕС‡РЅСѓСЋ
+ind1 <- subset(bankruptcy, bankruptcy[,"Р‘Р°РЅРєСЂРѕС‚"]==1, select=ID: Р‘Р°РЅРєСЂРѕС‚)
+ind0 <- subset(bankruptcy, bankruptcy[,"Р‘Р°РЅРєСЂРѕС‚"]==0, select=ID: Р‘Р°РЅРєСЂРѕС‚)
 sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
 sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
 
@@ -67,50 +67,50 @@ testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
 rownames(training_data)<-NULL
 rownames(testing_data)<-NULL
 rm(ind0, ind1, sampind0, sampind1, i)
-clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
+clear_test <- subset(testing_data, select=Р›РёРєРІРёРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ:Р‘Р°РЅРєСЂРѕС‚)
 
-#строим логистическую регрессию, оказалось, что Автономность мало влияет на Банкротство
-glm.out <- step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, family=binomial, data=training_data))
+#СЃС‚СЂРѕРёРј Р»РѕРіРёСЃС‚РёС‡РµСЃРєСѓСЋ СЂРµРіСЂРµСЃСЃРёСЋ, РѕРєР°Р·Р°Р»РѕСЃСЊ, С‡С‚Рѕ РђРІС‚РѕРЅРѕРјРЅРѕСЃС‚СЊ РјР°Р»Рѕ РІР»РёСЏРµС‚ РЅР° Р‘Р°РЅРєСЂРѕС‚СЃС‚РІРѕ
+glm.out <- step(glm(Р‘Р°РЅРєСЂРѕС‚ ~ Р›РёРєРІРёРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ + Р РµРЅС‚Р°Р±РµР»СЊРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ + Р”РѕС…РѕРґРЅРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ + РћР±РѕСЂР°С‡РёРІР°РµРјРѕСЃС‚СЊ.Р°РєС‚РёРІРѕРІ, family=binomial, data=training_data))
 summary(glm.out)
 confint(glm.out)
 exp(glm.out$coefficients)
 exp(confint(glm.out))
 
-#Округлим полученные значения
+#РћРєСЂСѓРіР»РёРј РїРѕР»СѓС‡РµРЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ
 testing_data$predicted_value_log <-  predict(glm.out, newdata = clear_test, type = "response")
 convert <- function(data){if(data >= 0.5)return (1) else return (0)}
 testing_data$predicted_value_log <- lapply(testing_data$predicted_value_log, convert)
 
-#Строим регрессионное дерево
-reg_tree <- rpart(Банкрот ~ ., data = clear_test, method = "anova")
+#РЎС‚СЂРѕРёРј СЂРµРіСЂРµСЃСЃРёРѕРЅРЅРѕРµ РґРµСЂРµРІРѕ
+reg_tree <- rpart(Р‘Р°РЅРєСЂРѕС‚ ~ ., data = clear_test, method = "anova")
 printcp(reg_tree)
-plotcp(reg_tree) # покажем график кросс-валидации
+plotcp(reg_tree) # РїРѕРєР°Р¶РµРј РіСЂР°С„РёРє РєСЂРѕСЃСЃ-РІР°Р»РёРґР°С†РёРё
 summary(reg_tree) 
 
 rsq.rpart(reg_tree) # visualize cross-validation results    
 
 # plot tree 
-plot(reg_tree, uniform=TRUE, main="Дерево регрессии")
+plot(reg_tree, uniform=TRUE, main="Р”РµСЂРµРІРѕ СЂРµРіСЂРµСЃСЃРёРё")
 text(reg_tree, use.n=TRUE, all=TRUE, cex=.8)
 
-#Тестим дерево
+#РўРµСЃС‚РёРј РґРµСЂРµРІРѕ
 testing_data$predicted_value_regtree <- predict(reg_tree,  testing_data, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
 correct <- function(data){if(data >= 0.5)return (1) else return (0)}
 testing_data$predicted_value_regtree <- testing_data$predicted_value_regtree - 1
 testing_data$predicted_value_regtree <- lapply(testing_data$predicted_value_regtree, correct)
 
 
-#Метод random forests
-fit <- randomForest(Банкрот ~  ., data=clear_test)
+#РњРµС‚РѕРґ random forests
+fit <- randomForest(Р‘Р°РЅРєСЂРѕС‚ ~  ., data=clear_test)
 print(fit) # view results 
 importance(fit) # importance of each predictor
 
-#Тестим дерево
+#РўРµСЃС‚РёРј РґРµСЂРµРІРѕ
 testing_data$predicted_value_random <-predict(fit, testing_data, type="response" )
 
 
-#Алгоритм C.5.0
-reg_tree_c50 <- C5.0(x = training_data[, -6], y = training_data$Банкрот)
+#РђР»РіРѕСЂРёС‚Рј C.5.0
+reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Р‘Р°РЅРєСЂРѕС‚)
 testing_data$predicted_value_regtree50 <- predict(reg_tree_c50,  clear_test)
 summary(reg_tree_c50)
 

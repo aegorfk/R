@@ -17,7 +17,8 @@ library("rpart")
 library("randomForest")
 #install.packages("C50", dependencies = TRUE)
 library("C50")
-
+#install.packages("neuralnet", dependencies = TRUE)
+library("neuralnet")
 
 
 
@@ -115,6 +116,10 @@ testing_data$predicted_value_regtree50 <- predict(reg_tree_c50,  clear_test)
 summary(reg_tree_c50)
 
 
+#Нейронная сеть
+clear_test$Банкрот <- as.integer(clear_test$Банкрот)
+training_data$Банкрот <- as.integer(training_data$Банкрот)
+nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 5, stepmax = 2e05, threshold = 0.02, lifesign = "full") 
+plot(nn)
 
-
-
+testing_data$predicted_value_nn <- compute(nn,  clear_test[, 1:5])

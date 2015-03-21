@@ -19,23 +19,21 @@ library("randomForest")
 library("C50")
 #install.packages("neuralnet", dependencies = TRUE)
 library("neuralnet")
-
-
-
-
-
-
+#install.packages("knitr", dependencies = TRUE)
+library("knitr")
+install.packages("pander", dependencies = TRUE)
+library("pander")
 
 
 #считываем данные из файла
-bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";")
-bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
+bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
 for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 
 
 
 #Посмотрим на наши данные
 summary(bankruptcy)
+pairs(Банкрот ~ Ликвидность.активов + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов,data = bankruptcy, main = "Диаграммы рассеивания для всех переменных")
 boxplot(Ликвидность.активов ~ Банкрот , data = bankruptcy, xlab = "Ликвидность активов", ylab = "Банкрот", main = "Зависимость банкротства от ликвидности активов")
 boxplot(Рентабельность.активов ~ Банкрот , data = bankruptcy, xlab = "Рентабельность активов", ylab = "Банкрот", main = "Зависимость банкротства от рентабельности активов")
 boxplot(Доходность.активов ~ Банкрот , data = bankruptcy, xlab = "Доходность активов", ylab = "Банкрот", main = "Зависимость банкротства от доходности активов")
@@ -83,43 +81,49 @@ convert <- function(data){if(data >= 0.5)return (1) else return (0)}
 testing_data$predicted_value_log <- lapply(testing_data$predicted_value_log, convert)
 
 #Строим регрессионное дерево
-reg_tree <- rpart(Банкрот ~ ., data = clear_test, method = "anova")
+reg_tree <- rpart(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data = training_data, method = "anova")
 printcp(reg_tree)
 plotcp(reg_tree) # покажем график кросс-валидации
 summary(reg_tree) 
 
 rsq.rpart(reg_tree) # visualize cross-validation results    
-
-# plot tree 
 plot(reg_tree, uniform=TRUE, main="Дерево регрессии")
 text(reg_tree, use.n=TRUE, all=TRUE, cex=.8)
 
 #Тестим дерево
-testing_data$predicted_value_regtree <- predict(reg_tree,  testing_data, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
+testing_data$predicted_value_regtree <- predict(reg_tree,  clear_test, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
 correct <- function(data){if(data >= 0.5)return (1) else return (0)}
-testing_data$predicted_value_regtree <- testing_data$predicted_value_regtree - 1
 testing_data$predicted_value_regtree <- lapply(testing_data$predicted_value_regtree, correct)
 
 
 #Метод random forests
-fit <- randomForest(Банкрот ~  ., data=clear_test)
+fit <- randomForest(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data=training_data)
 print(fit) # view results 
 importance(fit) # importance of each predictor
 
 #Тестим дерево
-testing_data$predicted_value_random <-predict(fit, testing_data, type="response" )
+testing_data$predicted_value_random <-predict(fit, clear_test, type="response" )
+testing_data$predicted_value_random <- lapply(testing_data$predicted_value_random, correct)
+plot(fit)
 
 
 #Алгоритм C.5.0
 reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
-testing_data$predicted_value_regtree50 <- predict(reg_tree_c50,  clear_test)
+plot(reg_tree_c50)
+testing_data$predicted_value_regtreeс50 <- predict(reg_tree_c50,  clear_test)
 summary(reg_tree_c50)
 
 
 #Нейронная сеть
 clear_test$Банкрот <- as.integer(clear_test$Банкрот)
 training_data$Банкрот <- as.integer(training_data$Банкрот)
-nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 5, stepmax = 2e05, threshold = 0.02, lifesign = "full") 
-plot(nn)
+clear_test <- as.data.frame(clear_test)
+nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=T) 
+plot(nn, rep = "best")
+print(nn)
+clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
+testing_data$predicted_value_nn <- compute(nn,  clear_test)
+head(testing_data)
+testing_data$predicted_value_nn <- lapply(testing_data$predicted_value_nn, mean)
 
-testing_data$predicted_value_nn <- compute(nn,  clear_test[, 1:5])
+rmarkdown::render("reg_tree_neural.Rmd")

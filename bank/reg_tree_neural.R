@@ -27,7 +27,7 @@ library("pander")
 
 #считываем данные из файла
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
-for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
+for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 
 
 
@@ -118,12 +118,12 @@ summary(reg_tree_c50)
 clear_test$Банкрот <- as.integer(clear_test$Банкрот)
 training_data$Банкрот <- as.integer(training_data$Банкрот)
 clear_test <- as.data.frame(clear_test)
-nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=T) 
+nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
 plot(nn, rep = "best")
 print(nn)
 clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
-testing_data$predicted_value_nn <- compute(nn,  clear_test)
-head(testing_data)
-testing_data$predicted_value_nn <- lapply(testing_data$predicted_value_nn, mean)
+bankruptcynet.results <- compute(nn,  clear_test)
+testing_data$prediction_nn <- round(bankruptcynet.results$net.result)
+
 
 rmarkdown::render("reg_tree_neural.Rmd")

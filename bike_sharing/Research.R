@@ -213,7 +213,7 @@ sd3 <- 3*sd(Bikes_85$resid)
 Bikes_85$OutsSd3<-ifelse(Bikes_85$resid<mean-sd3 | Bikes_85$resid>mean+sd3, 1, 0)
 plot(Bikes_85$resid, col=Bikes_85$OutsSd3+1, pch=16)
 
-#Идентификатор
+#Идентификатор Hampel
 mad <- mad(Bikes_85$resid)
 median <- median(Bikes_85$resid)
 Bikes_85$Outs<-ifelse(Bikes_85$resid>median+3*mad | Bikes_85$resid<median-3*mad, 1, 0)

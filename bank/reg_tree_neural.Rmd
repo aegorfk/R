@@ -1,6 +1,5 @@
 ---
 title: "Исследование банкротства фирм."
-output: html_document
 lang: russian
 ---
 #Состав команды:
@@ -14,6 +13,11 @@ https://drive.google.com/file/d/0Bw_qUDxhcJMjdXNpTDhPb3R0alU/view?usp=sharing
 #Описание предметной области:
 
 Набор данных содержит показатели финансового состояния предприятия и индикатор его способности расплатиться по долгам (банкротство) за итоговый период аудита.
+
+
+```{r}
+<img src='Porco-cofre.jpg' />
+```
 
 
 #Цель работы: 
@@ -62,8 +66,9 @@ library("neuralnet")
 library("knitr")
 library("pander")
 
+#считываем данные из файла
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
-for (i in 2:6) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
+for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
 opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 

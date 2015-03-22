@@ -108,10 +108,10 @@ plot(fit)
 
 
 #Алгоритм C.5.0
-reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
-plot(reg_tree_c50)
-testing_data$predicted_value_regtreeс50 <- predict(reg_tree_c50,  clear_test)
-summary(reg_tree_c50)
+# reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
+# plot(reg_tree_c50)
+# testing_data$predicted_value_regtreeс50 <- predict(reg_tree_c50,  clear_test)
+# summary(reg_tree_c50)
 
 
 #Нейронная сеть
@@ -127,3 +127,4 @@ testing_data$prediction_nn <- round(bankruptcynet.results$net.result)
 
 
 rmarkdown::render("reg_tree_neural.Rmd")
+

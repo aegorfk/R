@@ -35,3 +35,25 @@ bankruptcy$cluster <- factor(bank_kmeans$cluster)
 
 gplot <- nPlot(bankruptcy$cluster ~  bankruptcy2$Банкрот, group = 'cluster', data = bankruptcy_85, type = 'scatterChart', tooltip = "function(item) {return 'hi'}")
 gplot
+
+#Наивный классификатор
+install.packages('e1071', dependencies = TRUE)
+library(class)
+library(e1071)
+classifier<-naiveBayes(as.factor(Банкрот) ~ ., data = bankruptcy)
+predicted = predict(classifier, bankruptcy[,-c(6)]);
+predicted<-as.numeric(as.character(predicted))
+bankruptcy$naiveBayes <- predicted
+
+#Точность модели
+i<-0;
+for (j in 1:nrow(bankruptcy)){
+  if (bankruptcy$naiveBayes[j] == bankruptcy$Банкрот[j]) {
+    i<-i+1;
+    }
+}
+i<-i/nrow(bankruptcy)*100
+
+hist(bankruptcy$naiveBayes, col='blue', ylim=c(0,200))
+hist(bankruptcy$Банкрот, col=rgb(1,0.5,0.1,alpha=0.8), add=T)
+

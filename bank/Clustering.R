@@ -54,6 +54,6 @@ for (j in 1:nrow(bankruptcy)){
 }
 i<-i/nrow(bankruptcy)*100
 
-hist(bankruptcy$naiveBayes, col='blue', ylim=c(0,200))
+hist(bankruptcy$naiveBayes, col='blue', ylim=c(0,200), xlab = "Банкротство", ylab = 'Количество', main='Наивный Байесовский классификатор')
 hist(bankruptcy$Банкрот, col=rgb(1,0.5,0.1,alpha=0.8), add=T)
-
+legend("topright", c("предсказанное", "реальное"), col=c("blue", "orange"), lwd=10)

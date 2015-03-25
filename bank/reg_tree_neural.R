@@ -206,7 +206,7 @@ maxauc_c50 <- maxauc
 maxauct <- paste(c("max(AUC) = "),maxauc_c50,sep="")
 
 #Кривая ROC
-plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+plot(perf, main="ROC-кривая однослойного персептрона для тестовых данных ", lwd=2, col="pink")
 abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
@@ -239,5 +239,5 @@ abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 rmarkdown::render("reg_tree_neural.Rmd")
-
+ 
 

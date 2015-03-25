@@ -5,6 +5,11 @@ library("devtools")
 library("rCharts")
 #install.packages("rgl")
 library("rgl")
+#install.packages("e1071", dependencies = TRUE)
+library("e1071")
+#install.packages("class", dependencies = TRUE)
+library("class")
+
 
 
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE,  header=TRUE, sep=";")
@@ -37,9 +42,6 @@ gplot <- nPlot(bankruptcy$cluster ~  bankruptcy2$Банкрот, group = 'cluste
 gplot
 
 #Наивный классификатор
-install.packages('e1071', dependencies = TRUE)
-library(class)
-library(e1071)
 classifier<-naiveBayes(as.factor(Банкрот) ~ ., data = bankruptcy)
 predicted = predict(classifier, bankruptcy[,-c(6)]);
 predicted<-as.numeric(as.character(predicted))

@@ -174,7 +174,6 @@ knitr::kable(corstarsl(data.matrix(x)))
 
 В процессе исследования оказалось, что **Оборачиваемость активов** и **Автономность** мало влияют на **Банкротство**, эти переменные были исключены из итоговой модели. Полученная регрессия также применялась для прогнозирования.
 
-
 ```{r, include=FALSE}
 #строим логистическую регрессию, оказалось, что Автономность мало влияет на Банкротство
 glm.out <- step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, family=binomial, data=training_data))
@@ -211,7 +210,7 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 * FP (False Positives) – отрицательные примеры, классифицированные как положительные (ошибка II рода); Это ложное обнаружение, т.к. при отсутствии события ошибочно выносится решение о его присутствии (ложно положительные случаи). 
 
 Мы также высчитываем показатель AUC(area under ROC curve) для выявления прогнозной силы нашей модели. Он также будет использоваться в последующем для сравнительного анализа нескольких моделей.
-В результате построения вышло, что наша модель имеет `r maxauc_reg`. В литературе иногда приводится следующая экспертная шкала для значений AUC, по которой можно судить о качестве модели:
+В результате построения вышло, что наша модель имеет показатель AUC = `r maxauc_reg`. В литературе иногда приводится следующая экспертная шкала для значений AUC, по которой можно судить о качестве модели:
 
 * AUC -  Качество модели 
 * 0.9-1.0 -  Отличное 
@@ -228,6 +227,7 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 reg_tree <- rpart(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data = training_data, method = "anova")
 opts_chunk$set(echo=FALSE, message=FALSE)
 ```
+
 Построим график зависимости кросс-валидационных ошибок от числа расщеплений и сложности модели. Также выведем итоговое деревого после операции обрезки:
 
 ```{r, echo=FALSE}
@@ -263,8 +263,10 @@ plot(perf, main="ROC-кривая регрессионного дерева CART для тестовых данных ", lw
 abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 ```
-В результате построения вышло, что наша модель имеет `r maxauc_regtree`.
+
+В результате построения вышло, что наша модель имеет показатель AUC равный `r maxauc_regtree`.
 Мы также воспользовались методом random forests для дальнейшего прогнозирования и сравнения моделей. График количества ошибок от количества использованых в методе random forest деревьев выглядит следующим образом: 
+
 ```{r, include=FALSE}
 fit <- randomForest(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data=training_data)
 print(fit) # view results 
@@ -295,22 +297,81 @@ opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
 ```{r, echo=FALSE}
-plot(perf, main="ROC-кривая регрессионного дерева CART для тестовых данных ", lwd=2, col="pink")
+plot(perf, main="ROC-кривая random forests для тестовых данных ", lwd=2, col="pink")
 abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 ```
-В результате построения вышло, что наша модель имеет `r maxauc_random`.
 
-
-
-
-
-
-
+В результате построения вышло, что наша модель имеет AUC равный `r maxauc_random`.
 
 Последним регрессионным деревом стало дерево, построенное с использованием алгоритма C.5.0:
 
-```{r, results='asis'}
+```{r, include=FALSE}
+training_data$Банкрот<-as.factor(training_data$Банкрот)
+testing_data$Банкрот<-as.factor(testing_data$Банкрот)
+clear_test$Банкрот<-as.factor(clear_test$Банкрот)
 
+reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
+summary(reg_tree_c50)
+
+#Получим прогноз
+testing_data$predicted_value_regtreeс50 <-  predict(reg_tree_c50, newdata = clear_test)
+preds <- prediction(as.numeric(testing_data$predicted_value_regtreeс50), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_c50 <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_c50,sep="")
+opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+В результате построения вышло, что наша модель имеет AUC равный `r maxauc_c50`. Для полноты конкуренции мы отсроили также нейронную сеть (однослойный персептрон):
+
+```{r, include=FALSE}
+#Нейронная сеть
+clear_test$Банкрот <- as.integer(clear_test$Банкрот)
+training_data$Банкрот <- as.integer(training_data$Банкрот)
+clear_test <- as.data.frame(clear_test)
+
+nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов  + Доходность.активов  + Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
+plot(nn, rep = "best")
+clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
+
+bankruptcynet.results <- compute(nn,  clear_test)
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(nn, rep = "best")
+```
+
+
+```{r, include=FALSE}
+testing_data$prediction_nn <-  round(bankruptcynet.results$net.result)
+preds <- prediction(as.numeric(testing_data$prediction_nn), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_nn <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_nn,sep="")
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая однослойного персептрона для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+В результате построения вышло, что наша модель имеет AUC равный `r maxauc_nn`.

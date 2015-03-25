@@ -178,13 +178,37 @@ maxauct <- paste(c("max(AUC) = "),maxauc_random,sep="")
 #Округлим полученные значения
 testing_data$predicted_value_random <- lapply(testing_data$predicted_value_random, correct)
 
+#ROC-анализ
+plot(perf, main="ROC-кривая random forests для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+
+
 
 
 #Алгоритм C.5.0
-# reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
-# plot(reg_tree_c50)
-# testing_data$predicted_value_regtreeс50 <- predict(reg_tree_c50,  clear_test)
-# summary(reg_tree_c50)
+training_data$Банкрот<-as.factor(training_data$Банкрот)
+testing_data$Банкрот<-as.factor(testing_data$Банкрот)
+clear_test$Банкрот<-as.factor(clear_test$Банкрот)
+
+reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
+summary(reg_tree_c50)
+
+#Получим прогноз
+testing_data$predicted_value_regtreeс50 <-  predict(reg_tree_c50, newdata = clear_test)
+preds <- prediction(as.numeric(testing_data$predicted_value_regtreeс50), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_c50 <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_c50,sep="")
+
+#Кривая ROC
+plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 
 #Нейронная сеть
@@ -193,10 +217,27 @@ training_data$Банкрот <- as.integer(training_data$Банкрот)
 clear_test <- as.data.frame(clear_test)
 nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов	+ Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
 plot(nn, rep = "best")
-print(nn)
+
 clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
 bankruptcynet.results <- compute(nn,  clear_test)
-testing_data$prediction_nn <- round(bankruptcynet.results$net.result)
 
+
+#Получим прогноз
+testing_data$prediction_nn <-  round(bankruptcynet.results$net.result)
+preds <- prediction(as.numeric(testing_data$prediction_nn), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_nn <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_nn,sep="")
+
+#ROC кривая
+plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 rmarkdown::render("reg_tree_neural.Rmd")
+
+

@@ -21,7 +21,7 @@ library("C50")
 library("neuralnet")
 #install.packages("knitr", dependencies = TRUE)
 library("knitr")
-#install.packages("ROCR", dependencies = TRUE)
+install.packages("ROCR", dependencies = TRUE)
 library("ROCR")
 #install.packages("Hmisc", dependencies = TRUE)
 library("Hmisc")
@@ -212,32 +212,20 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 
 #Нейронная сеть
-clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
 clear_test$Банкрот <- as.integer(clear_test$Банкрот)
 training_data$Банкрот <- as.integer(training_data$Банкрот)
 clear_test <- as.data.frame(clear_test)
-nn <- neuralnet(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
-plot(nn, rep = "best")
-print(nn)
-clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
-bankruptcynet.results <- compute(nn, clear_test)
-testing_data$prediction_nn <- round(bankruptcynet.results$net.result)
 
-
-#Нейронная сеть
-clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
-clear_test$Банкрот <- as.integer(clear_test$Банкрот)
-training_data$Банкрот <- as.integer(training_data$Банкрот)
-clear_test <- as.data.frame(clear_test)
-nn <- neuralnet(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
-plot(nn, rep = "best")
-print(nn)
+nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов  + Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
 clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
-bankruptcynet.results <- compute(nn, clear_test)
+
+bankruptcynet.results <- compute(nn,  clear_test)
+
 
 #Получим прогноз
-testing_data$prediction_nn <-  round(bankruptcynet.results$net.result)
-preds <- prediction(as.numeric(testing_data$prediction_nn), as.numeric(testing_data$Банкрот)) 
+testing_data$prediction_nn <-  bankruptcynet.results$net.result
+nn_res <- list(predictions = testing_data$prediction_nn, labels = testing_data$Банкрот)
+preds <- prediction(nn_res$predictions, nn_res$labels) 
 perf <- performance(preds, "tpr", "fpr") 
 perf2 <- performance(preds, "auc")
 
@@ -247,8 +235,10 @@ maxauc_nn <- maxauc
 maxauct <- paste(c("max(AUC) = "),maxauc_nn,sep="")
 
 #ROC кривая
-plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+plot(perf, main="ROC-кривая нейронной сети для тестовых данных ", lwd=2, col="pink")
 abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 rmarkdown::render("reg_tree_neural.Rmd")
+ 
+

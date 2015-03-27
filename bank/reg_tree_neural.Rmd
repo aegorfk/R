@@ -9,12 +9,12 @@ lang: russian
 Для анализа были взяты следующие данные: 
 https://drive.google.com/file/d/0Bw_qUDxhcJMjdXNpTDhPb3R0alU/view?usp=sharing
 
-```{r,fig.align='center'}
-opts_chunk$set(echo=FALSE, message=FALSE, fig.align='center')
+```{r,fig.align='center', echo=FALSE}
+
 library(png)
 library(grid)
 img <- readPNG('Porco-cofre.png')
- grid.raster(img)
+grid.raster(img)
 ```
 
 **Объектом исследования** является финансовое состояние предприятия и индикаторы его способности расплатиться по долгам (банкротство) за итоговый период аудита.
@@ -70,7 +70,8 @@ library("devtools")
 library("rCharts")
 library("e1071")
 library("class")
-
+library(ROCR)
+library(clue)
 
 ## load the package
 library(rCharts)
@@ -92,11 +93,22 @@ add_lib_assets <- function(lib, cdn = F,css=NULL) {
 # get assets from online repositories 
 add_lib_assets("NVD3",cdn=TRUE,css="http://rawgithub.com/ramnathv/rCharts/master/inst/libraries/nvd3/css/rNVD3.css") 
 add_lib_assets("Polycharts",cdn=TRUE)
-
+opts_chunk$set(echo=FALSE, message=FALSE, fig.align='center')
 #считываем данные из файла
+readBank <- function(){
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
 for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
-
+bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- bankruptcy[-c(1,195),]
+rownames(bankruptcy) <- NULL
+return(bankruptcy)
+}
+bankruptcy <- readBank();
+bankruptcy_backup <- bankruptcy;
 ```
 
 
@@ -112,15 +124,6 @@ pairs(Банкрот ~ Ликвидность.активов + Рентабел�
 
 
 Мы решили исключить выбросы из наших данных. После преобразований диаграммы Бокса-Вискера для наших переменных стали такими:
-
-```{r, include=FALSE}
-bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[-c(1,195),]
-```
 
 Зависимости **Банкротства** от **Ликвидности активов**:
 ```{r}
@@ -161,6 +164,10 @@ rownames(training_data)<-NULL
 rownames(testing_data)<-NULL
 rm(ind0, ind1, sampind0, sampind1, i)
 clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
+
+training_data_backup <- training_data;
+testing_data_backup <- testing_data;
+clear_test_backup <- clear_test;
 ```
 
 
@@ -221,6 +228,8 @@ exp(confint(glm.out))
 #Получим прогноз
 testing_data$predicted_value_log <-  predict(glm.out, newdata = clear_test, type = "response")
 check1<- list(predictions =  as.numeric(as.character(testing_data$predicted_value_log)),labels = as.numeric(as.character(testing_data$Банкрот)))
+library(ROCR)
+    data(ROCR.simple)
 preds <- prediction(check1$predictions,check1$labels) 
 perf <- performance(preds, "tpr", "fpr") 
 perf2 <- performance(preds, "auc")
@@ -374,29 +383,10 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 ```{r, include=FALSE}
 #Нейронная сеть
-bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
-for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
-bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[-c(1,195),]
-
-#plot(bankruptcy$Доходность.активов, bankruptcy$Рентабельность.активов)
-#with(bankruptcy, text(Доходность.активов~Рентабельность.активов, labels = row.names(bankruptcy), pos = 1))
-
-ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
-ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
-sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
-sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
-
-training_data <- rbind(sampind0, sampind1)
-testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
-rownames(training_data)<-NULL
-rownames(testing_data)<-NULL
-rm(ind0, ind1, sampind0, sampind1, i)
-clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
+bankruptcy <- bankruptcy_backup;
+training_data <- training_data_backup;
+testing_data <- testing_data_backup;
+clear_test <- clear_test_backup;
 
 clear_test$Банкрот <- as.integer(clear_test$Банкрот)
 training_data$Банкрот <- as.integer(training_data$Банкрот)
@@ -438,13 +428,7 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 ###Кластеризация:
 ```{r, fig.align='center'}
-bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE,  header=TRUE, sep=";")
-bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
-bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
-bankruptcy <- bankruptcy[-c(1,195),]
+bankruptcy <- readBank();
 bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
 
 for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))

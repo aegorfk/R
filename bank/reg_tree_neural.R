@@ -21,7 +21,7 @@ library("C50")
 library("neuralnet")
 #install.packages("knitr", dependencies = TRUE)
 library("knitr")
-#install.packages("ROCR", dependencies = TRUE)
+install.packages("ROCR", dependencies = TRUE)
 library("ROCR")
 #install.packages("Hmisc", dependencies = TRUE)
 library("Hmisc")
@@ -223,8 +223,9 @@ bankruptcynet.results <- compute(nn,  clear_test)
 
 
 #Получим прогноз
-testing_data$prediction_nn <-  round(bankruptcynet.results$net.result)
-preds <- prediction(as.numeric(testing_data$prediction_nn), as.numeric(testing_data$Банкрот)) 
+testing_data$prediction_nn <-  bankruptcynet.results$net.result
+nn_res <- list(predictions = testing_data$prediction_nn, labels = testing_data$Банкрот)
+preds <- prediction(nn_res$predictions, nn_res$labels) 
 perf <- performance(preds, "tpr", "fpr") 
 perf2 <- performance(preds, "auc")
 
@@ -234,7 +235,7 @@ maxauc_nn <- maxauc
 maxauct <- paste(c("max(AUC) = "),maxauc_nn,sep="")
 
 #ROC кривая
-plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+plot(perf, main="ROC-кривая нейронной сети для тестовых данных ", lwd=2, col="pink")
 abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 

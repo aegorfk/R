@@ -1,0 +1,458 @@
+---
+title: "Исследование банкротства фирм."
+lang: russian
+---
+**Состав команды:**
+
+Ляпина Екатерина, Дмитрий Гайдаржи
+
+Для анализа были взяты следующие данные: 
+https://drive.google.com/file/d/0Bw_qUDxhcJMjdXNpTDhPb3R0alU/view?usp=sharing
+
+**Объектом исследования** является финансовое состояние предприятия и индикаторы его способности расплатиться по долгам (банкротство) за итоговый период аудита.
+
+**Предметом исследования** выступают причинно-следственные связи и зависимости экономических показателей, формирующиеся в результате деятельности фирмы.
+
+**Цель работы:** 
+
+Установление структурных связей и закономерностей между элементами исследуемой системы в выбранной предметной области. Последующая интерпретация имеющихся данных, анализ применимости полученных результатов и создание наилучшей модели для дальнейшего прогнозирования подобных данных. В практическом смысле, аналитические модели могут успешно использоваться для решения задач выявления банкротства фирмы, и предупреждения подобных ситуаций.
+
+
+**Задачи:**
+
+Прохождение этапов извлечения, очистки и трансформации сырых данных.
+Использование разных методик и средств машинного обучения: деревьев решений, кластеризации, нейронных сетей
+
+Практическая задача сводится к необходимости выявления, в какой степени какие факторы определяют состоятельность компании и почему.
+
+
+#Описание данных:
+
+В нашем наборе данных `r nrow(bankruptcy)` наблюдений и 7 переменных. Исходный файл с данными в формате xlxs.
+
+
+###Описание исходных переменных:
+
+- **ID**: индекс записи, ее номер (в дальнейшем используется для выделения рандомных проверочных данных).
+- **Ликвидность.активов** : экономический термин, обозначающий способность активов быть быстро проданными по цене, близкой к рыночной. Показатель изменяется от 0 до 1.
+- **Рентабельность.активов** : показатель, который характеризует способность руководства компании эффективно использовать ее активы для получения прибыли. Этот коэффициент отражает среднюю доходность, полученную на все источники капитала (собственного и заемного), рассчитывается по формуле: рентабельность активов = чистая прибыль / активы
+- **Доходность.активов** : чистая прибыль в процентном отношении к активам.
+- **Автономность** : коэффициент финансовой независимости, характеризует отношение собственного капитала к общей сумме капитала организации. Коэффициент показывает, насколько организация независима от кредиторов. Чем меньше значение коэффициента, тем в большей степени организация зависима от заемных источников финансирование, тем менее устойчивое у нее финансовое положение.
+- **Оборачиваемость.активов** : финансовый показатель интенсивности использования организацией всей совокупности имеющихся активов. Данный показатель используется наряду с другими показателями для анализа эффективности управления имуществом и обязательствами фирмы.
+- **Банкрот** (зависимая переменная) : бинарная переменная (1 - да, 0 - нет), обозначает неспособность должника в полном объеме удовлетворить требования кредиторов по денежным обязательствам и (или) исполнить обязанность по уплате обязательных платежей.
+
+
+```{r, include=FALSE}
+Sys.setenv(LANG = "en")
+library(ggplot2)
+library("MASS")
+library("epicalc")
+library("outliers")
+library("rpart")
+library("randomForest")
+library("C50")
+library("neuralnet")
+library("knitr")
+library("xtable")
+library("Hmisc")
+library("devtools")
+library("rCharts")
+library("e1071")
+library("class")
+#считываем данные из файла
+bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
+for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+
+Описательная статистика по нашей выбоке:
+```{r, results='asis'}
+knitr::kable(summary(bankruptcy))
+```
+
+Диаграммы рассеивания для имеющихся переменных:
+```{r}
+pairs(Банкрот ~ Ликвидность.активов + Рентабельность.активов  + Доходность.активов	+ Автономность +	Оборачиваемость.активов,data = bankruptcy, main = "Диаграммы рассеивания для всех переменных")
+```
+
+
+Мы решили исключить выбросы из наших данных. После преобразований диаграммы Бокса-Вискера для наших переменных стали такими:
+
+```{r, include=FALSE}
+bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+```
+
+Зависимости **Банкротства** от **Ликвидности активов**:
+```{r}
+boxplot(Ликвидность.активов ~ Банкрот , data = bankruptcy, xlab = "Ликвидность активов", ylab = "Банкрот", main = "Зависимость банкротства от ликвидности активов")
+```
+
+Построим диаграмму Бокса-Вискера для зависимости **Банкротства** от **Рентабельности активов**:
+```{r}
+boxplot(Рентабельность.активов ~ Банкрот , data = bankruptcy, xlab = "Рентабельность активов", ylab = "Банкрот", main = "Зависимость банкротства от рентабельности активов")
+```
+
+Построим диаграмму Бокса-Вискера для зависимость **Банкротства** от **Доходности активов**:
+```{r}
+boxplot(Доходность.активов ~ Банкрот , data = bankruptcy, xlab = "Доходность активов", ylab = "Банкрот", main = "Зависимость банкротства от доходности активов")
+```
+
+Построим диаграмму Бокса-Вискера для зависимости **Банкротства** от **Автономности активов**:
+```{r}
+boxplot(Автономность ~ Банкрот , data = bankruptcy, xlab = "Автономность", ylab = "Банкрот", main = "Зависимость банкротства от автономности активов")
+```
+
+Построим диаграмму Бокса-Вискера для зависимости **Банкротства** от **Оборачиваемости активов**:
+```{r}
+boxplot(Оборачиваемость.активов ~ Банкрот , data = bankruptcy, xlab = "Оборачиваемость.активов", ylab = "Банкрот", main = "Зависимость банкротства от оборачиваемости активов")
+```
+
+Для проверки полученной модели мы разделили все имеющиеся данные в соотношении 85:15. То есть тренировочными данными мы сделали 211 записей, мы выбрали их случайным образом из нашей выборки так, чтобы подвыборка была репрезентативная нашим данным.
+
+```{r, results='asis'}
+ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
+ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
+sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
+sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
+
+training_data <- rbind(sampind0, sampind1)
+testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
+rownames(training_data)<-NULL
+rownames(testing_data)<-NULL
+rm(ind0, ind1, sampind0, sampind1, i)
+clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
+```
+
+
+Построим матрицу Пирсона для наших тренировочных данных:
+```{r, include=FALSE}
+#Функция построения матрицы Пирсона с уровнями значимости:
+corstarsl <- function(x)
+{ 
+  #Исходная матрица
+  x <- as.matrix(x) 
+  R <- rcorr(x)$r 
+  p <- rcorr(x)$P 
+  
+  #задание уровней значимости. 
+  mystars <- ifelse(p < .001, "***", ifelse(p < .01, "** ", ifelse(p < .05, "* ", " ")))
+  
+  #Округление значений матрицы до 2 знаков после запятой
+  R <- format(round(cbind(rep(-1.11, ncol(x)), R), 2))[,-1] 
+  
+  #Построение матрицы со значениями корреляции и уровнями значимости
+  Rnew <- matrix(paste(R, mystars, sep=""), ncol=ncol(x)) 
+  diag(Rnew) <- paste(diag(R), " ", sep="") 
+  rownames(Rnew) <- colnames(x) 
+  colnames(Rnew) <- paste(colnames(x), "", sep="") 
+  
+  #Удаление верхнего треугольника матрицы
+  Rnew <- as.matrix(Rnew)
+  Rnew[upper.tri(Rnew, diag = TRUE)] <- ""
+  Rnew <- as.data.frame(Rnew) 
+  
+  #Удаление последней колонки ( так как она пуста ) и возврат готовой матрицы
+  Rnew <- cbind(Rnew[1:length(Rnew)-1])
+  return(Rnew) 
+}
+
+#Выборка из 7 переменных для анализа взаимосвязей показателей с помощью матрицы Пирсона
+x <- subset(training_data, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов",  "Автономность", "Оборачиваемость.активов",  "Банкрот")); 
+
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+```{r, results='asis'}
+#Вызов функции построения матрицы
+knitr::kable(corstarsl(data.matrix(x)))
+```
+
+###Построение моделей и прогнозирование:
+
+Построение моделей мы начали с бинарной логистической регрессии. Она наоболее всего подходит в случаях, когда зависимая переменная является дихотомической. Для нахождения коэффициентов логистической регрессии, использовался метод максимального правдоподобия, уже встроенный в пакет языка R.
+
+В процессе исследования оказалось, что **Оборачиваемость активов** и **Автономность** мало влияют на **Банкротство**, эти переменные были исключены из итоговой модели. Полученная регрессия также применялась для прогнозирования.
+
+```{r, include=FALSE}
+#строим логистическую регрессию, оказалось, что Автономность мало влияет на Банкротство
+glm.out <- step(glm(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, family=binomial, data=training_data))
+summary(glm.out)
+exp(confint(glm.out))
+
+#Получим прогноз
+testing_data$predicted_value_log <-  predict(glm.out, newdata = clear_test, type = "response")
+
+
+preds <- prediction(as.numeric(testing_data$predicted_value_log), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_reg <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_reg,sep="")
+#Округлим полученные значения
+convert <- function(data){if(data >= 0.4)return (1) else return (0)}
+testing_data$predicted_value_log <- lapply(testing_data$predicted_value_log, convert)
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая регрессии для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+Мы используем ROC-кривую для представления результатов прогнозирования нашей модели. По сути мы построили функцию, которая считает долю истинно положительных примеров (True Positives Rate) и ложно положительных примеров (False Positives Rate). Мы взяли порог отсечения равным 0.4 для этих тестовых данных.
+
+* TP (True Positives) – верно классифицированные положительные примеры (так называемые истинно положительные случаи); 
+* FP (False Positives) – отрицательные примеры, классифицированные как положительные (ошибка II рода); Это ложное обнаружение, т.к. при отсутствии события ошибочно выносится решение о его присутствии (ложно положительные случаи). 
+
+Мы также высчитываем показатель AUC(area under ROC curve) для выявления прогнозной силы нашей модели. Он также будет использоваться в последующем для сравнительного анализа нескольких моделей.
+В результате построения вышло, что наша модель имеет показатель AUC = `r maxauc_reg`. В литературе иногда приводится следующая экспертная шкала для значений AUC, по которой можно судить о качестве модели:
+
+* AUC -  Качество модели 
+* 0.9-1.0 -  Отличное 
+* 0.8-0.9 -  Очень хорошее 
+* 0.7-0.8 -	Хорошее 
+* 0.6-0.7 - Среднее 
+* 0.5-0.6 - Неудовлетворительное
+
+
+В последующем мы построили регрессионное дерево, воспользовавшись алгоритмом CART. Дерево было использовано для дальнейшего прогнозирования и сравнения моделей уже описанными способами.
+
+```{r, include=FALSE}
+#Строим регрессионное дерево
+reg_tree <- rpart(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data = training_data, method = "anova")
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+Построим график зависимости кросс-валидационных ошибок от числа расщеплений и сложности модели. Также выведем итоговое деревого после операции обрезки:
+
+```{r, echo=FALSE}
+plotcp(reg_tree) # покажем график кросс-валидации
+plot(reg_tree, uniform=TRUE, main="Дерево регрессии")
+text(reg_tree, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+После выявления наилучшей модели мы также провели ROC-анализ:
+
+```{r, include=FALSE}
+#Получим прогноз
+testing_data$predicted_value_regtree <- predict(reg_tree,  clear_test, type = c("vector", "prob", "class", "matrix"), na.action = na.pass)
+
+
+preds <- prediction(as.numeric(testing_data$predicted_value_regtree), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_regtree <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_regtree,sep="")
+
+#Округлим полученные значения
+correct <- function(data){if(data >= 0.1)return (1) else return (0)}
+testing_data$predicted_value_regtree <- lapply(testing_data$predicted_value_regtree, correct)
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая регрессионного дерева CART для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+В результате построения вышло, что наша модель имеет показатель AUC равный `r maxauc_regtree`.
+Мы также воспользовались методом random forests для дальнейшего прогнозирования и сравнения моделей. График количества ошибок от количества использованых в методе random forest деревьев выглядит следующим образом: 
+
+```{r, include=FALSE}
+fit <- randomForest(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Оборачиваемость.активов, data=training_data)
+print(fit) # view results 
+importance(fit) # importance of each predictor
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+```{r, echo=FALSE}
+plot(fit)
+```
+
+После построения мы также провели ROC-анализ:
+
+```{r, include=FALSE}
+#Получим прогноз
+testing_data$predicted_value_random <-  predict(fit, newdata = clear_test, type = "response")
+preds <- prediction(as.numeric(testing_data$predicted_value_random), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_random <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_random,sep="")
+
+#Округлим полученные значения
+testing_data$predicted_value_random <- lapply(testing_data$predicted_value_random, correct)
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая random forests для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+В результате построения вышло, что наша модель имеет AUC равный `r maxauc_random`.
+
+Последним регрессионным деревом стало дерево, построенное с использованием алгоритма C.5.0:
+
+```{r, include=FALSE}
+training_data$Банкрот<-as.factor(training_data$Банкрот)
+testing_data$Банкрот<-as.factor(testing_data$Банкрот)
+clear_test$Банкрот<-as.factor(clear_test$Банкрот)
+
+reg_tree_c50 <- C5.0(x = clear_test, y = clear_test$Банкрот)
+summary(reg_tree_c50)
+
+#Получим прогноз
+testing_data$predicted_value_regtreeс50 <-  predict(reg_tree_c50, newdata = clear_test)
+preds <- prediction(as.numeric(testing_data$predicted_value_regtreeс50), as.numeric(testing_data$Банкрот)) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_c50 <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_c50,sep="")
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+В результате построения вышло, что наша модель имеет AUC равный `r maxauc_c50`. Для полноты конкуренции мы отсроили также нейронную сеть (однослойный персептрон):
+
+```{r, include=FALSE}
+#Нейронная сеть
+bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
+for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
+bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
+ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
+sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
+sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
+
+training_data <- rbind(sampind0, sampind1)
+testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
+rownames(training_data)<-NULL
+rownames(testing_data)<-NULL
+rm(ind0, ind1, sampind0, sampind1, i)
+clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
+
+clear_test$Банкрот <- as.integer(clear_test$Банкрот)
+training_data$Банкрот <- as.integer(training_data$Банкрот)
+clear_test <- as.data.frame(clear_test)
+
+nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов  + Доходность.активов  + Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
+clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
+
+bankruptcynet.results <- compute(nn,  clear_test)
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(nn, rep = "best")
+```
+
+
+```{r, include=FALSE}
+testing_data$prediction_nn <-  bankruptcynet.results$net.result
+nn_res <- list(predictions = testing_data$prediction_nn, labels = testing_data$Банкрот)
+preds <- prediction(nn_res$predictions, nn_res$labels) 
+perf <- performance(preds, "tpr", "fpr") 
+perf2 <- performance(preds, "auc")
+
+auc <- unlist(slot(performance(preds, "auc"), "y.values"))
+maxauc<-max(round(auc, digits = 2))
+maxauc_nn <- maxauc
+maxauct <- paste(c("max(AUC) = "),maxauc_nn,sep="")
+opts_chunk$set(echo=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+plot(perf, main="ROC-кривая нейронной сети для тестовых данных ", lwd=2, col="pink")
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
+```
+
+В результате построения вышло, что наша модель имеет AUC равный `r maxauc_nn`.
+
+###Кластеризация:
+```{r}
+bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE,  header=TRUE, sep=";")
+bankruptcy <- bankruptcy[ which(bankruptcy$Автономность < 30 ), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Рентабельность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Оборачиваемость.активов < 10), ]
+bankruptcy <- bankruptcy[ which(bankruptcy$Доходность.активов > -6), ]
+bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
+
+for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
+for (i in 2:6) bankruptcy[,i] <- 1/(1+(exp(-1*bankruptcy[,i])))
+#pairs(~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов,data=bankruptcy,  main="Scatterplot Matrix")
+#plot3d(x = bankruptcy$Ликвидность.активов, y = bankruptcy$Рентабельность.активов, z = bankruptcy$Доходность.активов)
+
+bankruptcy$Банкрот <- factor(bankruptcy$Банкрот)
+#сбалансированно бьем выборку на тестовую и проверочную
+ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
+ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
+sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
+sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
+testing_data<-NULL
+training_data<-NULL
+training_data$values <- rbind(sampind0, sampind1)
+testing_data$values <- bankruptcy[!(bankruptcy$ID %in% training_data$values$ID),]
+rownames(training_data$values)<-NULL
+rownames(testing_data$values)<-NULL
+rm(ind0, ind1, sampind0, sampind1, i)
+
+testing_data$values$ID<-NULL
+training_data$values$ID<-NULL
+testing_data$Банкрот<-testing_data$values$Банкрот
+training_data$Банкрот<-training_data$values$Банкрот
+testing_data$values$Банкрот<-NULL
+training_data$values$Банкрот<-NULL
+
+bank <- (nrow(training_data$values) -1)*sum(apply(training_data$values, 2,var))
+for (i in 2:20) bank[i]  <- sum(kmeans(training_data$values, center = i)$withinss)
+plot(1:20, bank, type="b")
+axis(side=1, at=c(0:20))
+
+
+nr <- NROW(training_data$values)
+#ind <- sample(nr, 0.9 * nr, replace = FALSE)
+party <- kmeans(training_data$values, 7)
+
+#lets see what we got
+plot(training_data$values, col=party$cluster)
+points(party$centers, pch=16)
+
+kmeans_test <- cl_predict(party, training_data$values)
+kmeans_test_res <- table(cluster = kmeans_test, bankrot = training_data$Банкрот)
+kmeans_test_res
+
+kmeans_predict<- cl_predict(party, testing_data$values)
+kmeans_res <- table(cluster = kmeans_predict, bankrot = testing_data$Банкрот)
+kmeans_res
+```
+

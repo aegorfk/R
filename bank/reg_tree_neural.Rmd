@@ -337,15 +337,13 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 ```{r, include=FALSE}
 #Нейронная сеть
+clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
 clear_test$Банкрот <- as.integer(clear_test$Банкрот)
 training_data$Банкрот <- as.integer(training_data$Банкрот)
 clear_test <- as.data.frame(clear_test)
-
-nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов  + Доходность.активов  + Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
-plot(nn, rep = "best")
+nn <- neuralnet(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
 clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
-
-bankruptcynet.results <- compute(nn,  clear_test)
+bankruptcynet.results <- compute(nn, clear_test)
 opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
@@ -360,7 +358,6 @@ preds <- prediction(as.numeric(testing_data$prediction_nn), as.numeric(testing_d
 perf <- performance(preds, "tpr", "fpr") 
 perf2 <- performance(preds, "auc")
 
-
 auc <- unlist(slot(performance(preds, "auc"), "y.values"))
 maxauc<-max(round(auc, digits = 2))
 maxauc_nn <- maxauc
@@ -369,7 +366,7 @@ opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
 ```{r, echo=FALSE}
-plot(perf, main="ROC-кривая однослойного персептрона для тестовых данных ", lwd=2, col="pink")
+plot(perf, main="ROC-кривая алгоритма с5.0 для тестовых данных ", lwd=2, col="pink")
 abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 ```

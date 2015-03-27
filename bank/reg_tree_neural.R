@@ -212,15 +212,28 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 
 #Нейронная сеть
+clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
 clear_test$Банкрот <- as.integer(clear_test$Банкрот)
 training_data$Банкрот <- as.integer(training_data$Банкрот)
 clear_test <- as.data.frame(clear_test)
-
-nn <- neuralnet(Банкрот ~ Ликвидность.активов  + Рентабельность.активов  + Доходность.активов	+ Автономность +	Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
+nn <- neuralnet(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
+plot(nn, rep = "best")
+print(nn)
 clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
+bankruptcynet.results <- compute(nn, clear_test)
+testing_data$prediction_nn <- round(bankruptcynet.results$net.result)
 
-bankruptcynet.results <- compute(nn,  clear_test)
 
+#Нейронная сеть
+clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
+clear_test$Банкрот <- as.integer(clear_test$Банкрот)
+training_data$Банкрот <- as.integer(training_data$Банкрот)
+clear_test <- as.data.frame(clear_test)
+nn <- neuralnet(Банкрот ~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов, data = training_data, hidden = 6, stepmax = 2e05, lifesign = "minimal",linear.output=F) 
+plot(nn, rep = "best")
+print(nn)
+clear_test <- subset(clear_test, select = c("Ликвидность.активов", "Рентабельность.активов", "Доходность.активов", "Автономность", "Оборачиваемость.активов"))
+bankruptcynet.results <- compute(nn, clear_test)
 
 #Получим прогноз
 testing_data$prediction_nn <-  round(bankruptcynet.results$net.result)
@@ -239,5 +252,3 @@ abline(a=0,b=1,lwd=2,lty=2,col="gray")
 legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 rmarkdown::render("reg_tree_neural.Rmd")
- 
-

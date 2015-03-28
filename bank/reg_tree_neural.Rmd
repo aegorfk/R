@@ -619,6 +619,8 @@ for (j in 1:length(predicted)){
     }
 }
 i<-i/length(predicted)*100
+
+opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
 Совпадение предсказаний составило `r i`%
@@ -628,5 +630,5 @@ i<-i/length(predicted)*100
 ```{r}
 hist(predicted, col='blue', ylim=c(0,30), xlab = "Банкротство", ylab = 'Количество', main='Наивный Байесовский классификатор')
 hist(as.numeric(as.character(testing_data$Банкрот)), col=rgb(1,0.5,0.1,alpha=0.8), add=T)
-legend("topright", c("предсказанное", "реальное"), col=c("blue", "orange"), lwd=10)
+legend("topright", c("Предсказанное", "Реальное", "Пересечения"), col=c("blue", "orange", "pink"), lwd=10)
 ```

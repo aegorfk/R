@@ -25,6 +25,16 @@ install.packages("ROCR", dependencies = TRUE)
 library("ROCR")
 #install.packages("Hmisc", dependencies = TRUE)
 library("Hmisc")
+#install.packages("png", dependencies=TRUE)
+library("png")
+#install.packages("grid", dependencies=TRUE)
+library("grid")
+
+
+
+
+
+
 
 
 

@@ -94,6 +94,7 @@ add_lib_assets <- function(lib, cdn = F,css=NULL) {
 add_lib_assets("NVD3",cdn=TRUE,css="http://rawgithub.com/ramnathv/rCharts/master/inst/libraries/nvd3/css/rNVD3.css") 
 add_lib_assets("Polycharts",cdn=TRUE)
 opts_chunk$set(echo=FALSE, message=FALSE, fig.align='center')
+
 #считываем данные из файла
 readBank <- function(){
 bankruptcy <- read.csv(file="Предприятия-А.csv",stringsAsFactors = FALSE, header=TRUE, sep=";", dec= ".")
@@ -162,7 +163,7 @@ training_data <- rbind(sampind0, sampind1)
 testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
 rownames(training_data)<-NULL
 rownames(testing_data)<-NULL
-rm(ind0, ind1, sampind0, sampind1, i)
+rm(ind0, ind1, sampind0, sampind1)
 clear_test <- subset(testing_data, select=Ликвидность.активов:Банкрот)
 
 training_data_backup <- training_data;
@@ -229,7 +230,7 @@ exp(confint(glm.out))
 testing_data$predicted_value_log <-  predict(glm.out, newdata = clear_test, type = "response")
 check1<- list(predictions =  as.numeric(as.character(testing_data$predicted_value_log)),labels = as.numeric(as.character(testing_data$Банкрот)))
 library(ROCR)
-    data(ROCR.simple)
+data(ROCR.simple)
 preds <- prediction(check1$predictions,check1$labels) 
 perf <- performance(preds, "tpr", "fpr") 
 perf2 <- performance(preds, "auc")
@@ -428,34 +429,18 @@ legend(0.5,0.4,c(maxauct,"\n"),border="white",cex=1.1,box.col = "white")
 
 ###Кластеризация:
 ```{r, fig.align='center'}
-bankruptcy <- readBank();
-bankruptcy <- as.data.frame(sapply(bankruptcy, gsub, pattern=",",replacement="."))
-
-for (i in 2:7) bankruptcy[,i]  <- as.numeric(as.character(bankruptcy[,i]))
-for (i in 2:6) bankruptcy[,i] <- 1/(1+(exp(-1*bankruptcy[,i])))
-#pairs(~ Ликвидность.активов + Рентабельность.активов + Доходность.активов + Автономность + Оборачиваемость.активов,data=bankruptcy,  main="Scatterplot Matrix")
-#plot3d(x = bankruptcy$Ликвидность.активов, y = bankruptcy$Рентабельность.активов, z = bankruptcy$Доходность.активов)
-
-bankruptcy$Банкрот <- factor(bankruptcy$Банкрот)
-#сбалансированно бьем выборку на тестовую и проверочную
-ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
-ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
-sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
-sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
-testing_data<-NULL
-training_data<-NULL
-training_data$values <- rbind(sampind0, sampind1)
-testing_data$values <- bankruptcy[!(bankruptcy$ID %in% training_data$values$ID),]
-rownames(training_data$values)<-NULL
-rownames(testing_data$values)<-NULL
-rm(ind0, ind1, sampind0, sampind1, i)
-
-testing_data$values$ID<-NULL
-training_data$values$ID<-NULL
-testing_data$Банкрот<-testing_data$values$Банкрот
-training_data$Банкрот<-training_data$values$Банкрот
-testing_data$values$Банкрот<-NULL
-training_data$values$Банкрот<-NULL
+training_data <- NULL
+testing_data <- NULL
+training_data$values <- training_data_backup
+training_data$Банкрот <- training_data$values$Банкрот
+testing_data$values <- testing_data_backup
+testing_data$Банкрот <- testing_data$values$Банкрот
+training_data$values$Банкрот <- NULL
+testing_data$values$Банкрот <- NULL
+training_data$values$ID <- NULL
+testing_data$values$ID <- NULL
+for (i in 2:5) training_data$values[,i] <- 1/(1+(exp(-1*training_data$values[,i])))
+for (i in 2:5) testing_data$values[,i] <- 1/(1+(exp(-1*testing_data$values[,i])))
 
 bank <- (nrow(training_data$values) -1)*sum(apply(training_data$values, 2,var))
 for (i in 2:20) bank[i]  <- sum(kmeans(training_data$values, center = i)$withinss)
@@ -474,14 +459,13 @@ nr <- NROW(training_data$values)
 #ind <- sample(nr, 0.9 * nr, replace = FALSE)
 party <- kmeans(training_data$values, 5)
 ```
-Определив оптимальное количество кластеров, был применен метод k - средних, который разбил данные на 5 кластеров. Результат работы данного алгоритма можно продемонстрировать в виде следующей матрицы:
+Определив оптимальное количество кластеров, был применен метод k - средних, который разбил данные на 5 кластеров. Результат работы данного алгоритма можно продемонстрировать в виде матрицы диаграмм рассеивания:
 ```{r}
 #lets see what we got
 plot(training_data$values, col=party$cluster)
 ```
-Рассмотрем распределение банкротов полученных кластерах
+Рассмотрим распределение банкротов в полученных кластерах  на тренировочных данных:
 ```{r}
-
 kmeans_test <- cl_predict(party, training_data$values)
 kmeans_test_res <- as.data.frame(table(cluster = kmeans_test, "Банкрот" = training_data$Банкрот))
 kn<-(NROW(kmeans_test_res)/2)
@@ -491,7 +475,7 @@ colnames(kmeans_test_rest)<-c('№ кластера','Не банкрот')
 kn1<-kn+1
 kn2<-NROW(kmeans_test_res)
 kmeans_test_rest$'Банкрот' <- kmeans_test_res[kn1:kn2,3]
-kmeans_test_rest$'Доля в %' <- round(kmeans_test_rest$'Банкрот'/(kmeans_test_rest$'Не банкрот' + kmeans_test_rest$'Банкрот')*100,digits=2)
+kmeans_test_rest$'Доля банкротов от общего числа (в %)' <- round(kmeans_test_rest$'Банкрот'/(kmeans_test_rest$'Не банкрот' + kmeans_test_rest$'Банкрот')*100,digits=2)
 kmeans_test_res<-kmeans_test_rest
 kable(kmeans_test_res,digits=2)
 ```
@@ -508,7 +492,7 @@ colnames(kmeans_test_rest)<-c('№ кластера','Не банкрот')
 kn1<-kn+1
 kn2<-NROW(kmeans_test_res)
 kmeans_test_rest$'Банкрот' <- kmeans_test_res[kn1:kn2,3]
-kmeans_test_rest$'Доля в %' <- round(kmeans_test_rest$'Банкрот'/(kmeans_test_rest$'Не банкрот' + kmeans_test_rest$'Банкрот')*100,digits=2)
+kmeans_test_rest$'Доля банкротов от общего числа (в %)' <- round(kmeans_test_rest$'Банкрот'/(kmeans_test_rest$'Не банкрот' + kmeans_test_rest$'Банкрот')*100,digits=2)
 kmeans_test_res<-kmeans_test_rest
 kable(kmeans_test_res,digits=2)
 ```
@@ -598,7 +582,7 @@ p5$show('iframesrc',cdn=TRUE)
 
 
 
-```{r,echo=TRUE}
+```{r,echo=FALSE}
 #Наивный классификатор
 naivesource <- data.frame(training_data$values)
 naivesource$Банкрот <- training_data$Банкрот
@@ -617,9 +601,7 @@ for (j in 1:length(predicted)){
 i<-i/length(predicted)*100
 ```
 
-Совпадение предсказаний составило `r i`%
-
-Отобразим распределение результатов байесовского классификатора на гистограмме
+Совпадение предсказаний составило `r i`%. Отобразим распределение результатов байесовского классификатора на гистограмме. Морковным цветом отображается пересечение множеств "предсказанное" и "реальное" значения.  
 
 ```{r}
 hist(predicted, col='blue', ylim=c(0,30), xlab = "Банкротство", ylab = 'Количество', main='Наивный Байесовский классификатор')

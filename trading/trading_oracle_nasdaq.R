@@ -63,35 +63,6 @@ Quotes_ORCL[,10] <- EMA(Quotes_ORCL[,2], n=50, ratio = (50+1)/(50-1))
 lines(Quotes_ORCL[1:300,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[10] <- "EMAL"
 
-
-
-
-if(hours > 100) net.price <- net.price * 0.9
-if(public) {
-  tot.price <- net.price * 1.06
-} else {
-  tot.price <- net.price * 1.12
-}
-
-
-
-
-WMA <- function(n,i)
-    {
-  L = 2*n
-  if((i >= 0)&(i < L)) (2/(L*(L+1)))*(L-i)
-  else  0
-  }
-
-for (i in 10:2519) Quotes_ORCL[i,11] <- WMA(10, Quotes_ORCL[i, 2])
-colnames(Quotes_ORCL)[11] <- "WMAS"
-
-for (i in 50:2519) Quotes_ORCL[i,12] <- WMA(50, Quotes_ORCL[i, 2])
-colnames(Quotes_ORCL)[12] <- "WMAL"
-
-
-
-
 WMA <- function(L, data){
   wma_w <- function(L,n)
   {

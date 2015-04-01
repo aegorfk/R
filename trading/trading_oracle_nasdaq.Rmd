@@ -14,7 +14,7 @@ http://www.nasdaq.com/symbol/orcl/historical
 ```{r,fig.align='center', echo=FALSE}
 library(png)
 library(grid)
-img <- readPNG('nasdaq.png')
+img <- readPNG('nasdaq_small.png')
 grid.raster(img)
 opts_chunk$set(echo=FALSE, message=FALSE)
 ```
@@ -75,7 +75,7 @@ knitr::kable(summary(Quotes_ORCL))
 
 Линейный график зависимости цены закрытия для 300 наблюдений (период с 2005-03-28 по 2006-06-02):
 
-```{r, include=FALSE}
+```{r}
 plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
 ```
 
@@ -92,10 +92,18 @@ ORCL <- ORCL[ ! duplicated( index(ORCL) ),]
 plot(Quotes_ORCL[1:300,3], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Объем торгов", main="Акции компании ORACLE", ylim=c(0,203555500) )
 ```
 
+
 График цены в форме японских свечей (где зеленым цветом отображено, когда цена закрытия выше цены открытия, красным - наоборот):
 
 ```{r}
-plot(Quotes_ORCL[1:300,3], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Объем торгов", main="Акции компании ORACLE", ylim=c(0,203555500) )
+chartSeries(ORCL,subset='2005-03-28::2005-10-26')
+```
+
+
+Столбиковый график:
+
+```{r}
+barChart(ORCL,subset='2005-03-28::2005-10-26', theme='white.mono',bar.type='hlc')
 ```
 
 
@@ -141,6 +149,40 @@ colnames(Quotes_ORCL)[9] <- "EMAS"
 Quotes_ORCL[,10] <- EMA(Quotes_ORCL[,2], n=50, ratio = (50+1)/(50-1))
 lines(Quotes_ORCL[1:300,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[10] <- "EMAL"
+
+#График сопоставления экспоненциальных скользящих средних между собой:
+Quotes_ORCL[,9] <- EMA(Quotes_ORCL[,2], n=10, ratio = (10+1)/(10-1))
+plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
+lines(Quotes_ORCL[1:300,9], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+colnames(Quotes_ORCL)[9] <- "EMAS"
+
+Quotes_ORCL[,10] <- EMA(Quotes_ORCL[,2], n=50, ratio = (50+1)/(50-1))
+lines(Quotes_ORCL[1:300,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+colnames(Quotes_ORCL)[10] <- "EMAL"
+
+WMA <- function(L, data){
+  wma_w <- function(L,n)
+  {
+    if((n >= 0)&(n < L)) (2/(L*(L+1)))*(L-n)
+    else 0
+  }
+  x <- vector(mode="numeric", length=NROW(data))
+  for (i in 1:NROW(data)){
+    if (i<L) x[i] <- NA
+    else {
+      value = 0;
+      counter = 0;
+      for (j in i:(i-L+1)){
+        value = value + data[j] * wma_w(L,counter)
+        counter = counter + 1;
+      }
+      x[i]<-value;
+    }
+  }
+  return(x)
+}
+Quotes_ORCL[,11] <- WMA(10, Quotes_ORCL[, 2])
+Quotes_ORCL[,12] <- WMA(50, Quotes_ORCL[, 2])
 ```
 
 

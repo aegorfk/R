@@ -145,3 +145,11 @@ legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), 
 
 
 
+
+
+
+
+
+
+
+rmarkdown::render("trading_oracle_nasdaq.Rmd")

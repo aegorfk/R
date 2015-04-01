@@ -1,5 +1,4 @@
 ---
-title: "trading_oracle_nasdaq"
 author: "Ляпина Екатерина"
 date: "Monday, March 30, 2015"
 output: html_document
@@ -17,6 +16,7 @@ library(png)
 library(grid)
 img <- readPNG('nasdaq.png')
 grid.raster(img)
+opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
 
@@ -65,16 +65,17 @@ for (i in 2:6) Quotes_ORCL[,i]  <- as.numeric(as.character(Quotes_ORCL[,i]))
 #Инвертируем значения dataframe
 for (i in 1:2519) Quotes_ORCL[i,]  <- Quotes_ORCL[2519 - i + 1,]
 Quotes_ORCL[,1]  <- as.Date(Quotes_ORCL[,1])
+opts_chunk$set(echo=FALSE, message=FALSE)
 ```
 
 Описательная статистика по нашей выбоке:
 ```{r, results='asis'}
-knitr::kable(summary(bankruptcy))
+knitr::kable(summary(Quotes_ORCL))
 ```
 
 Линейный график зависимости цены закрытия для 300 наблюдений (период с 2005-03-28 по 2006-06-02):
 
-```{r}
+```{r, include=FALSE}
 plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
 ```
 
@@ -172,24 +173,3 @@ legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), 
 
 
 
-
-
-
-
-
-
-
-
-
-
-```{r}
-summary(cars)
-```
-
-You can also embed plots, for example:
-
-```{r, echo=FALSE}
-plot(cars)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

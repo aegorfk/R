@@ -1,5 +1,6 @@
 ---
 title: "Исследование банкротства фирм."
+output: word_document
 lang: russian
 ---
 **Состав команды:**

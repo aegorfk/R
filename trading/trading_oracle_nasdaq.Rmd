@@ -113,7 +113,62 @@ chartSeries(ORCL, subset='2005-03-28::2005-10-26',TA="addSMA(50)")
 ```
 
 
+График сопоставления скользящих средних между собой:
 
+```{r}
+for (i in 10:2519) Quotes_ORCL[i,7] <- mean(Quotes_ORCL[(i-9):i,2])
+plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
+lines(Quotes_ORCL[1:300,7], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+colnames(Quotes_ORCL)[7] <- "SMAS"
+
+
+for (i in 50:2519) Quotes_ORCL[i,8] <- mean(Quotes_ORCL[(i-49):i,2])
+lines(Quotes_ORCL[1:300,8], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+colnames(Quotes_ORCL)[8] <- "SMAL"
+```
+
+
+График сопоставления экспоненциальных скользящих средних между собой:
+
+```{r}
+#График сопоставления экспоненциальных скользящих средних между собой:
+Quotes_ORCL[,9] <- EMA(Quotes_ORCL[,2], n=10, ratio = (10+1)/(10-1))
+plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
+lines(Quotes_ORCL[1:300,9], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+colnames(Quotes_ORCL)[9] <- "EMAS"
+
+Quotes_ORCL[,10] <- EMA(Quotes_ORCL[,2], n=50, ratio = (50+1)/(50-1))
+lines(Quotes_ORCL[1:300,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+colnames(Quotes_ORCL)[10] <- "EMAL"
+```
+
+
+
+
+
+Графики для короткого окна усреднения. для наглядности мы возьмем первые 100 наблюдений:
+
+```{r}
+#Графики для короткого окна усреднения:
+plot(Quotes_ORCL[1:100,2], type="l", lwd=2, col="black", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
+lines(Quotes_ORCL[1:100,7], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+lines(Quotes_ORCL[1:100,9], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+lines(Quotes_ORCL[1:100,11], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+legend("topleft", c("SMA-S", "EMA-S", "WMA-S"), col=c("red", "orange", "blue"), lwd=4)
+```
+
+
+Графики для длинного окна усреднения. для наглядности мы возьмем первые 100 наблюдений:
+
+```{r}
+#Графики для длинного окна усреднения:
+plot(Quotes_ORCL[1:100,2], type="l", lwd=2, col="black", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
+lines(Quotes_ORCL[1:100,8], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+lines(Quotes_ORCL[1:100,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+lines(Quotes_ORCL[1:100,12], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), lwd=4)
+
+```
 
 
 

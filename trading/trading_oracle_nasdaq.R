@@ -208,6 +208,51 @@ for (i in 1:NROW(intersections))
 legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 
 
+#Попробуем добиться лучшего финансового результата, варьирую длительность окна усреднения:
+
+Quotes_ORCL_S <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "open", "high",  "low"))
+Quotes_ORCL_L <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "open", "high",  "low"))
+result <- data.frame(big = numeric(), small = numeric(), budget = numeric(), stock = numeric(), profit = numeric())
+
+
+for (small in 2:3) {
+  #SMA    
+  a <- ncol(Quotes_ORCL_S)+1 #номер нашего испытания
+  for (i in small:nrow(Quotes_ORCL_S)) Quotes_ORCL_S[i,a] <- mean(Quotes_ORCL_S[(i-(small - 1)):i,2])
+  colnames(Quotes_ORCL_S)[ncol(Quotes_ORCL_S)] <- paste("SMAS", small, sep=" ")
+
+  #EMA
+  Quotes_ORCL_S[,ncol(Quotes_ORCL_S) + 1] <- EMA(Quotes_ORCL_S[,2], n=small, ratio = 1-((small-1)/(small+1)))
+  colnames(Quotes_ORCL_S)[ncol(Quotes_ORCL_S)] <- paste("EMAS", small, sep=" ")
+  
+  #WMA
+  Quotes_ORCL_S[,ncol(Quotes_ORCL_S) + 1] <- WMA(small, Quotes_ORCL_S[, 2])
+  colnames(Quotes_ORCL_S)[ncol(Quotes_ORCL_S)] <- paste("WMAS", small, sep=" ")
+
+ }
+
+
+for (big in 2:3) {
+  #SMA    
+  a <- ncol(Quotes_ORCL_L)+1 #номер нашего испытания
+  for (i in big:nrow(Quotes_ORCL_L)) Quotes_ORCL_L[i,a] <- mean(Quotes_ORCL_L[(i-(big - 1)):i,2])
+  colnames(Quotes_ORCL_L)[ncol(Quotes_ORCL_L)] <- paste("SMAL", big, sep=" ")
+  
+  #EMA
+  Quotes_ORCL_L[,ncol(Quotes_ORCL_L) + 1] <- EMA(Quotes_ORCL_L[,2], n=big, ratio = 1-((big-1)/(big+1)))
+  colnames(Quotes_ORCL_L)[ncol(Quotes_ORCL_L)] <- paste("EMAL", big, sep=" ")
+  
+  #WMA
+  Quotes_ORCL_L[,ncol(Quotes_ORCL_L) + 1] <- WMA(big, Quotes_ORCL_L[, 2])
+  colnames(Quotes_ORCL_L)[ncol(Quotes_ORCL_L)] <- paste("WMAL", big, sep=" ")
+    
+}
+
+Quotes_ORCL_stategy <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "open", "high",  "low"))
+for (big in 1:6) {
+  Quotes_ORCL_L <- Quotes_ORCL_L[,-1]
+  Quotes_ORCL_S <- Quotes_ORCL_S[,-1]
+}
 
 
 
@@ -231,6 +276,10 @@ legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 
 
 
-#
-rmarkdown::render("trading_oracle_nasdaq.Rmd")
+
+
+
+
+rm(Quotes_ORCL_S,Quotes_ORCL_L, result)
+#rmarkdown::render("trading_oracle_nasdaq.Rmd")
 

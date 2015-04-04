@@ -27,13 +27,13 @@ library("zoo")
 library("TTR")
 
 
-#Считываем данные из файла, примедем их к виду, пригодному для анализа в R:
+#Считываем данные из файла, приведем их к виду, пригодному для анализа в R:
 Quotes_ORCL1 <- read.csv(file="HistoricalQuotes.csv",stringsAsFactors = FALSE, header=TRUE, sep=",", dec= ".")
 for (i in 2:6) Quotes_ORCL1[,i]  <- as.numeric(as.character(Quotes_ORCL1[,i]))
 #Инвертируем значения:
 Quotes_ORCL <- subset(Quotes_ORCL1, select = c("date", "close", "volume",  "open", "high",  "low")); 
 
-for (i in 1:2519) Quotes_ORCL[i,]  <- Quotes_ORCL1[2519 - i + 1,]
+for (i in 1:nrow(Quotes_ORCL1)) Quotes_ORCL[i,]  <- Quotes_ORCL1[nrow(Quotes_ORCL1) - i + 1,]
 Quotes_ORCL[,1]  <- as.Date(Quotes_ORCL[,1])
 Quotes_ORCL = Quotes_ORCL[-1,]
 rownames(Quotes_ORCL)<-NULL
@@ -130,11 +130,11 @@ chartSeries(ORCL, subset='2005-03-28::2005-10-26',TA="addSMA(50)")
 
 ```{r}
 #График сопоставления скользящих средних между собой:
-for (i in 10:2519) Quotes_ORCL[i,7] <- mean(Quotes_ORCL[(i-9):i,2])
+for (i in 10:nrow(Quotes_ORCL)) Quotes_ORCL[i,7] <- mean(Quotes_ORCL[(i-9):i,2])
 plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
 lines(Quotes_ORCL[1:300,7], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[7] <- "SMAS"
-for (i in 50:2519) Quotes_ORCL[i,8] <- mean(Quotes_ORCL[(i-49):i,2])
+for (i in 50:nrow(Quotes_ORCL)) Quotes_ORCL[i,8] <- mean(Quotes_ORCL[(i-49):i,2])
 lines(Quotes_ORCL[1:300,8], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[8] <- "SMAL"
 legend("topleft", c("SMA-S", "SMA-L"), col=c("blue", "orange"), lwd=4)
@@ -224,9 +224,9 @@ legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), 
 ```{r}
 drawSquares <- function(data, start){
   #Графики для EMA-S и EMA-L:
-plot(Quotes_ORCL[10:2519,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,25) )
-lines(Quotes_ORCL[10:2519,9], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
-lines(Quotes_ORCL[10:2519,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+plot(Quotes_ORCL[10:nrow(Quotes_ORCL),2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,25) )
+lines(Quotes_ORCL[10:nrow(Quotes_ORCL),9], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+lines(Quotes_ORCL[10:nrow(Quotes_ORCL),10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 axis(side=1, at=vec,labels=Quotes_ORCL[vec,1], las=2,cex.axis = 0.6,srt = 60)
 
 
@@ -275,6 +275,7 @@ legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 - Нет комиссий биржи
 - Сигнал на покупку: когда быстрая (EMA-S) обгоняет медленную (EMA-L) - розовая область графика переходит в зеленую
 - Сигнал на продажу: когда медленная (EMA-L) обгоняет быструю (EMA-S) - зеленая область графика переходит в розовую
+- На начало переиода у нас `r Quotes_ORCL[1, 2]*500` долларов
 
 
 ```{r, include=FALSE}
@@ -309,3 +310,10 @@ for (i in 1:NROW(intersections))
   }
 }
 ```
+
+
+В результате  работы механизма у нас осталось `r Quotes_ORCL[nrow(Quotes_ORCL), 13]` долларов и  `r Quotes_ORCL[nrow(Quotes_ORCL), 2]*Quotes_ORCL[nrow(Quotes_ORCL), 14]` акций на конец периода. Иначе говоря, наша прибыль оставила `r max(Quotes_ORCL[nrow(Quotes_ORCL), 13], Quotes_ORCL[nrow(Quotes_ORCL), 2]*Quotes_ORCL[nrow(Quotes_ORCL), 14]) - Quotes_ORCL[1, 2]*500` долларов.
+
+
+
+

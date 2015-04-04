@@ -205,8 +205,32 @@ for (i in 1:NROW(intersections))
   }
   
 }
+legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 
 
 
-#rmarkdown::render("trading_oracle_nasdaq.Rmd")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+rmarkdown::render("trading_oracle_nasdaq.Rmd")
 

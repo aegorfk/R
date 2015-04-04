@@ -13,15 +13,21 @@ library("TTR")
 library(png)
 
 
-#Считываем данные из файла, примедем их к виду, пригодному для анализа в R:
-Quotes_ORCL <- read.csv(file="HistoricalQuotes.csv",stringsAsFactors = FALSE, header=TRUE, sep=",", dec= ".")
+#Считываем данные из файла, приведем их к виду, пригодному для анализа в R:
+Quotes_ORCL1 <- read.csv(file="HistoricalQuotes.csv",stringsAsFactors = FALSE, header=TRUE, sep=",", dec= ".")
+for (i in 2:6) Quotes_ORCL1[,i]  <- as.numeric(as.character(Quotes_ORCL1[,i]))
+#Инвертируем значения:
+Quotes_ORCL <- subset(Quotes_ORCL1, select = c("date", "close", "volume",  "open", "high",  "low")); 
+
+for (i in 1:nrow(Quotes_ORCL1)) Quotes_ORCL[i,]  <- Quotes_ORCL1[nrow(Quotes_ORCL1) - i + 1,]
+Quotes_ORCL[,1]  <- as.Date(Quotes_ORCL[,1])
 Quotes_ORCL = Quotes_ORCL[-1,]
 rownames(Quotes_ORCL)<-NULL
-for (i in 2:6) Quotes_ORCL[,i]  <- as.numeric(as.character(Quotes_ORCL[,i]))
-#Инвертируем значения:
-for (i in 1:2519) Quotes_ORCL[i,]  <- Quotes_ORCL[2519 - i + 1,]
-Quotes_ORCL[,1]  <- as.Date(Quotes_ORCL[,1])
+rm(Quotes_ORCL1)
+
+
 summary(Quotes_ORCL)
+
 
 #Линейные графики:
 plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
@@ -42,15 +48,14 @@ chartSeries(ORCL, subset='2005-03-28::2005-10-26',TA="addSMA(10)")
 chartSeries(ORCL, subset='2005-03-28::2005-10-26',TA="addSMA(50)")
 
 #График сопоставления скользящих средних между собой:
-for (i in 10:2519) Quotes_ORCL[i,7] <- mean(Quotes_ORCL[(i-9):i,2])
+for (i in 10:nrow(Quotes_ORCL)) Quotes_ORCL[i,7] <- mean(Quotes_ORCL[(i-9):i,2])
 plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
 lines(Quotes_ORCL[1:300,7], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[7] <- "SMAS"
-
-
-for (i in 50:2519) Quotes_ORCL[i,8] <- mean(Quotes_ORCL[(i-49):i,2])
+for (i in 50:nrow(Quotes_ORCL)) Quotes_ORCL[i,8] <- mean(Quotes_ORCL[(i-49):i,2])
 lines(Quotes_ORCL[1:300,8], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[8] <- "SMAL"
+legend("topleft", c("SMA-S", "SMA-L"), col=c("blue", "orange"), lwd=4)
 
 
 #График сопоставления экспоненциальных скользящих средних между собой:
@@ -58,10 +63,12 @@ Quotes_ORCL[,9] <- EMA(Quotes_ORCL[,2], n=10, ratio = 1-((10-1)/(10+1)))
 plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,16) )
 lines(Quotes_ORCL[1:300,9], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[9] <- "EMAS"
-
 Quotes_ORCL[,10] <- EMA(Quotes_ORCL[,2], n=50, ratio = 1 - ((50-1)/(50+1)))
 lines(Quotes_ORCL[1:300,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[10] <- "EMAL"
+legend("topleft", c("EMA-S", "EMA-L"), col=c("blue", "orange"), lwd=4)
+
+
 
 WMA <- function(L, data){
   wma_w <- function(L,n)
@@ -73,13 +80,13 @@ WMA <- function(L, data){
   for (i in 1:NROW(data)){
     if (i<L) x[i] <- NA
     else {
-      value = 0;
-      counter = 0;
+      value = 0
+      counter = 0
       for (j in i:(i-L+1)){
         value = value + data[j] * wma_w(L,counter)
-        counter = counter + 1;
+        counter = counter + 1
       }
-      x[i]<-value;
+      x[i]<-value
     }
   }
   return(x)
@@ -92,7 +99,8 @@ plot(Quotes_ORCL[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдени�
 lines(Quotes_ORCL[1:300,11], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 colnames(Quotes_ORCL)[11] <- "WMAS"
 lines(Quotes_ORCL[1:300,12], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
-colnames(Quotes_ORCL)[12] <- "EMAL"
+colnames(Quotes_ORCL)[12] <- "WMAL"
+legend("topleft", c("WMA-S", "WMA-L"), col=c("blue", "orange"), lwd=4)
 
 
 
@@ -111,6 +119,9 @@ lines(Quotes_ORCL[1:100,8], type="l", lwd=2, col="red", xlab="Наблюдени
 lines(Quotes_ORCL[1:100,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 lines(Quotes_ORCL[1:100,12], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), lwd=4)
+
+
+
 
 
 #Графики для SMA-S и SMA-L:
@@ -151,23 +162,25 @@ drawSquares <- function(data, start){
 
 
 
-plot(Quotes_ORCL[,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE", ylim=c(10,25) )
-lines(Quotes_ORCL[,7], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
-lines(Quotes_ORCL[,8], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+plot(Quotes_ORCL[,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE")
+lines(Quotes_ORCL[,9], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+lines(Quotes_ORCL[,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
 
-vec <- drawSquares(Quotes_ORCL[,7:8], 50)
+vec <- drawSquares(Quotes_ORCL[,9:10], 50)
 axis(side=1, at=vec,labels=Quotes_ORCL[vec,1], las=2,cex.axis = 0.6,srt = 60)
-#legend("topleft", c("SMA-S", "SMA-L"), col=c("red", "orange"), lwd=2)
+legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
+
+
+
 
 
 #imitation game
 Quotes_ORCL$budget <- Quotes_ORCL[NROW(Quotes_ORCL),2]*500
 Quotes_ORCL$papers <- 0
 initx <- 50
-intersections <- drawSquares(Quotes_ORCL[,7:8], initx)
+intersections <- drawSquares(Quotes_ORCL[,9:10], initx)
 shallBuy <- FALSE
-if (Quotes_ORCL[initx,7] < Quotes_ORCL[initx,8]) shallBuy <-TRUE
-
+if (Quotes_ORCL[initx,9] < Quotes_ORCL[initx,10]) shallBuy <-TRUE
 for (i in 1:NROW(intersections))
   {
   if (shallBuy){
@@ -178,7 +191,7 @@ for (i in 1:NROW(intersections))
     budget <- budget %% price
     Quotes_ORCL[(index:(NROW(Quotes_ORCL))),14]<-papers
     Quotes_ORCL[(index:(NROW(Quotes_ORCL))),13]<-budget
-    shallBuy <- FALSE;
+    shallBuy <- FALSE
   }else{
     if (!shallBuy){
       index <- intersections[i]
@@ -187,7 +200,7 @@ for (i in 1:NROW(intersections))
       papers <-  0
       Quotes_ORCL[(index:NROW(Quotes_ORCL)),14]<-papers
       Quotes_ORCL[(index:NROW(Quotes_ORCL)),13]<-budget
-      shallBuy <- TRUE;
+      shallBuy <- TRUE
     }
   }
   
@@ -196,3 +209,4 @@ for (i in 1:NROW(intersections))
 
 
 #rmarkdown::render("trading_oracle_nasdaq.Rmd")
+

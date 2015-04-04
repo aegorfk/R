@@ -312,7 +312,7 @@ for (i in 1:NROW(intersections))
 ```
 
 
-В результате  работы механизма у нас осталось `r Quotes_ORCL[nrow(Quotes_ORCL), 13]` долларов и  `r Quotes_ORCL[nrow(Quotes_ORCL), 2]*Quotes_ORCL[nrow(Quotes_ORCL), 14]` акций на конец периода. Иначе говоря, наша прибыль оставила `r max(Quotes_ORCL[nrow(Quotes_ORCL), 13], Quotes_ORCL[nrow(Quotes_ORCL), 2]*Quotes_ORCL[nrow(Quotes_ORCL), 14]) - Quotes_ORCL[1, 2]*500` доллара.
+В результате  работы механизма у нас осталось `r Quotes_ORCL[nrow(Quotes_ORCL), 13]` долларов и  `r Quotes_ORCL[nrow(Quotes_ORCL), 2]*Quotes_ORCL[nrow(Quotes_ORCL), 14]` акций на конец периода. Иначе говоря, наша прибыль оставила `r Quotes_ORCL[nrow(Quotes_ORCL), 13] + Quotes_ORCL[nrow(Quotes_ORCL), 2]*Quotes_ORCL[nrow(Quotes_ORCL), 14] - Quotes_ORCL[nrow(Quotes_ORCL), 2]*500` доллара.
 
 
 

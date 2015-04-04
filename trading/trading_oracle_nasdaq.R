@@ -215,7 +215,7 @@ Quotes_ORCL_L <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "ope
 result <- data.frame(big = numeric(), small = numeric(), budget = numeric(), stock = numeric(), profit = numeric())
 
 
-for (small in 2:3) {
+for (small in 5:10) {
   #SMA    
   a <- ncol(Quotes_ORCL_S)+1 #номер нашего испытания
   for (i in small:nrow(Quotes_ORCL_S)) Quotes_ORCL_S[i,a] <- mean(Quotes_ORCL_S[(i-(small - 1)):i,2])
@@ -232,7 +232,7 @@ for (small in 2:3) {
  }
 
 
-for (big in 2:3) {
+for (big in 20:25) {
   #SMA    
   a <- ncol(Quotes_ORCL_L)+1 #номер нашего испытания
   for (i in big:nrow(Quotes_ORCL_L)) Quotes_ORCL_L[i,a] <- mean(Quotes_ORCL_L[(i-(big - 1)):i,2])
@@ -252,6 +252,11 @@ for (big in 2:3) {
 
 
 Quotes_strategy <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "open", "high",  "low"))
+#imitation game
+Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
+Quotes_strategy$papers <- 0
+
+
 for (big in 1:6) {
   Quotes_ORCL_L <- Quotes_ORCL_L[,-1]
   Quotes_ORCL_S <- Quotes_ORCL_S[,-1]
@@ -260,27 +265,22 @@ for (big in 1:6) {
 
 
 #Игра в имитацию
-for (small in 1:6) {
-  for (big in 1:6) {
-    small =2
-    big =3
+for (small in 1:(ncol(Quotes_ORCL_S))) {
+  for (big in 1:(ncol(Quotes_ORCL_L))) {
+  
     Quotes_strategy["Small"] <- Quotes_ORCL_S[,small]
     Quotes_strategy["Big"] <- Quotes_ORCL_S[,big] 
     plot(Quotes_strategy[,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE")
-      
+    
     lines(Quotes_strategy[,9], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
     lines(Quotes_strategy[,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
     
-    vec <- drawSquares(Quotes_ORCL[,9:10], 50)
     
-    #imitation game
-    Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
-    Quotes_strategy$papers <- 0
+    
     initx <- big
-    vec <- drawSquares(Quotes_ORCL[,9:10], 50)
-       intersections <- drawSquares(Quotes_strategy[,9:10], big)
+    intersections <- drawSquares(Quotes_strategy[,9:10], big)
     shallBuy <- FALSE
-    if (Quotes_strategy[initx,Quotes_ORCL_S[,small]] < Quotes_strategy[initx,Quotes_ORCL_L[,big]]) shallBuy <-TRUE
+    if (Quotes_strategy[initx,9] < Quotes_strategy[initx,10]) shallBuy <-TRUE
     for (i in 1:NROW(intersections))
     {
       if (shallBuy){
@@ -303,16 +303,16 @@ for (small in 1:6) {
           shallBuy <- TRUE
         }
       }
-      
     }
-    legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
+ 
 
-    result[nrow(result) + 1, 1] <- big
-    result[nrow(result), 2] <- small
-    result[nrow(result), 3] <- Quotes_strategy[NROW(Quotes_strategy),7]
-    result[nrow(result), 4] <- Quotes_strategy[NROW(Quotes_strategy),8]
-     result[nrow(result), 5] <- max(Quotes_strategy[nrow(Quotes_strategy), 7], Quotes_strategy[nrow(Quotes_strategy), 2]*Quotes_strategy[nrow(Quotes_strategy), 8]) - Quotes_strategy[1, 2]*500
-
+    result[nrow(result) + 1, 1] <- colnames(Quotes_ORCL_L)[[big]]
+    result[nrow(result), 2] <- colnames(Quotes_ORCL_S)[[small]]
+    result[nrow(result), 3] <- Quotes_strategy[nrow(Quotes_strategy),7]
+    result[nrow(result), 4] <- Quotes_strategy[nrow(Quotes_strategy),8]
+    result[nrow(result), 5] <- Quotes_strategy[nrow(Quotes_strategy), 7] + Quotes_strategy[nrow(Quotes_strategy),2]*Quotes_strategy[nrow(Quotes_strategy),8] - Quotes_strategy[1, 7]
+    Quotes_strategy<- Quotes_strategy[,-9]
+    Quotes_strategy <- Quotes_strategy[,-9]
   
   }}
 
@@ -337,6 +337,6 @@ for (small in 1:6) {
 
 
 
-rm(Quotes_ORCL_S,Quotes_ORCL_L, result)
+#rm(Quotes_ORCL_S,Quotes_ORCL_L, result)
 #rmarkdown::render("trading_oracle_nasdaq.Rmd")
 

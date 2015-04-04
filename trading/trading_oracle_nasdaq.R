@@ -248,7 +248,10 @@ for (big in 2:3) {
     
 }
 
-Quotes_ORCL_stategy <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "open", "high",  "low"))
+
+
+
+Quotes_strategy <- subset(Quotes_ORCL, select = c("date", "close", "volume",  "open", "high",  "low"))
 for (big in 1:6) {
   Quotes_ORCL_L <- Quotes_ORCL_L[,-1]
   Quotes_ORCL_S <- Quotes_ORCL_S[,-1]
@@ -256,8 +259,62 @@ for (big in 1:6) {
 
 
 
+#Игра в имитацию
+for (small in 1:6) {
+  for (big in 1:6) {
+    small =2
+    big =3
+    Quotes_strategy["Small"] <- Quotes_ORCL_S[,small]
+    Quotes_strategy["Big"] <- Quotes_ORCL_S[,big] 
+    plot(Quotes_strategy[,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE")
+      
+    lines(Quotes_strategy[,9], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+    lines(Quotes_strategy[,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
+    
+    vec <- drawSquares(Quotes_ORCL[,9:10], 50)
+    
+    #imitation game
+    Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
+    Quotes_strategy$papers <- 0
+    initx <- big
+    vec <- drawSquares(Quotes_ORCL[,9:10], 50)
+       intersections <- drawSquares(Quotes_strategy[,9:10], big)
+    shallBuy <- FALSE
+    if (Quotes_strategy[initx,Quotes_ORCL_S[,small]] < Quotes_strategy[initx,Quotes_ORCL_L[,big]]) shallBuy <-TRUE
+    for (i in 1:NROW(intersections))
+    {
+      if (shallBuy){
+        index <- intersections[i]
+        price <- Quotes_strategy[index,2]
+        budget <-  Quotes_strategy[index,7]
+        papers <-  budget  %/% price
+        budget <- budget %% price
+        Quotes_strategy[(index:(NROW(Quotes_strategy))),8]<-papers
+        Quotes_strategy[(index:(NROW(Quotes_strategy))),7]<-budget
+        shallBuy <- FALSE
+      }else{
+        if (!shallBuy){
+          index <- intersections[i]
+          price <- Quotes_strategy[index,2]
+          budget <-  Quotes_strategy[index,7] + price * Quotes_strategy[index,8]
+          papers <-  0
+          Quotes_strategy[(index:NROW(Quotes_strategy)),8]<-papers
+          Quotes_strategy[(index:NROW(Quotes_strategy)),7]<-budget
+          shallBuy <- TRUE
+        }
+      }
+      
+    }
+    legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 
+    result[nrow(result) + 1, 1] <- big
+    result[nrow(result), 2] <- small
+    result[nrow(result), 3] <- Quotes_strategy[NROW(Quotes_strategy),7]
+    result[nrow(result), 4] <- Quotes_strategy[NROW(Quotes_strategy),8]
+     result[nrow(result), 5] <- max(Quotes_strategy[nrow(Quotes_strategy), 7], Quotes_strategy[nrow(Quotes_strategy), 2]*Quotes_strategy[nrow(Quotes_strategy), 8]) - Quotes_strategy[1, 2]*500
 
+  
+  }}
 
 
 

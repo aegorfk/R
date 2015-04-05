@@ -10,7 +10,11 @@ library("zoo")
 #install.packages("TTR", dependencies=TRUE)
 library("TTR")
 #install.packages("png", dependencies=TRUE)
-library(png)
+library("png")
+#install.packages("checkpoint", dependencies=TRUE)
+#library("checkpoint")
+#checkpoint ("2015-04-05")
+
 
 
 #Считываем данные из файла, приведем их к виду, пригодному для анализа в R:

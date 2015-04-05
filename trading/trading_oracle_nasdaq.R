@@ -1,4 +1,4 @@
-# if you see KRAKOZYABRY then do 
+﻿# if you see KRAKOZYABRY then do 
 # "File" - "Reopen with encoding" - "UTF-8" - (Set as default) - OK
 
 
@@ -13,7 +13,7 @@ library("TTR")
 library("png")
 #install.packages("checkpoint", dependencies=TRUE)
 #library("checkpoint")
-#checkpoint ("2015-04-05")
+#checkpoint ("2015-04-05", R.version = "3.1.2", checkpointLocation = "C:/Users/Екатерина/Documents/GitHub/R/trading")
 
 
 

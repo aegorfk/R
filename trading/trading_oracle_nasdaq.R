@@ -1,4 +1,4 @@
-﻿# if you see KRAKOZYABRY then do 
+# if you see KRAKOZYABRY then do 
 # "File" - "Reopen with encoding" - "UTF-8" - (Set as default) - OK
 
 
@@ -272,7 +272,11 @@ for (big in 1:6) {
 for (small in 1:(ncol(Quotes_S))) {
   for (big in 1:(ncol(Quotes_L))) {
   
-    Quotes_strategy["Small"] <- Quotes_S[,small]
+    big <- 5
+    small <-1
+    for (i in 1:50) if(is.na(Quotes_L[i,big])) initx <- i +1
+  
+    Quotes_strategy["Small"] <- Quotes_S[,small] 
     Quotes_strategy["Big"] <- Quotes_S[,big] 
     plot(Quotes_strategy[,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE")
     
@@ -281,8 +285,8 @@ for (small in 1:(ncol(Quotes_S))) {
     
     
     
-    initx <- big
-    intersections <- drawSquares(Quotes_strategy[,9:10], big)
+    
+    intersections <- drawSquares(Quotes_strategy[,9:10], initx)
     shallBuy <- FALSE
     if (Quotes_strategy[initx,9] < Quotes_strategy[initx,10]) shallBuy <-TRUE
     for (i in 1:NROW(intersections))

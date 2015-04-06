@@ -129,7 +129,7 @@ legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), 
 
 
 #Графики для SMA-S и SMA-L:
-drawSquares <- function(data, start){
+drawSquares <- function(data, start, plot=FALSE){
   vec <- vector()
   notFirst = FALSE;
   init = FALSE;
@@ -144,7 +144,7 @@ drawSquares <- function(data, start){
       if (data[i,1]<data[i,2]){
         init=FALSE;
         vec <- c(vec,i)
-        if (notFirst)   rect(ix,miny,i,maxy, col=rgb(0.3,0.9,0.5,alpha=0.3));
+        if (notFirst & plot)   rect(ix,miny,i,maxy, col=rgb(0.3,0.9,0.5,alpha=0.3));
         if (!notFirst) notFirst = TRUE;
         ix = i;
       }
@@ -152,7 +152,7 @@ drawSquares <- function(data, start){
       if (data[i,1]>data[i,2]){
         init=TRUE;
         vec <- c(vec,i)
-        if (notFirst) rect(ix,miny,i,maxy, col=rgb(0.6,0.2,0.7,alpha=0.3));
+        if (notFirst & plot) rect(ix,miny,i,maxy, col=rgb(0.6,0.2,0.7,alpha=0.3));
         if (!notFirst) notFirst = TRUE;
         ix = i;
       }
@@ -236,7 +236,7 @@ for (small in 5:10) {
  }
 
 
-for (big in 20:25) {
+for (big in 20:50) {
   #SMA    
   a <- ncol(Quotes_L)+1 #номер нашего испытания
   for (i in big:nrow(Quotes_L)) Quotes_L[i,a] <- mean(Quotes_L[(i-(big - 1)):i,2])
@@ -257,9 +257,6 @@ for (big in 20:25) {
 
 Quotes_strategy <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
 #imitation game
-Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
-Quotes_strategy$papers <- 0
-
 
 for (big in 1:6) {
   Quotes_L <- Quotes_L[,-1]
@@ -271,22 +268,14 @@ for (big in 1:6) {
 #Игра в имитацию
 for (small in 1:(ncol(Quotes_S))) {
   for (big in 1:(ncol(Quotes_L))) {
-  
-    big <- 5
-    small <-1
+    Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
+    Quotes_strategy$papers <- 0
     for (i in 1:50) if(is.na(Quotes_L[i,big])) initx <- i +1
   
     Quotes_strategy["Small"] <- Quotes_S[,small] 
-    Quotes_strategy["Big"] <- Quotes_S[,big] 
-    plot(Quotes_strategy[,2], xaxt='n',type="l", lwd=2, col= rgb(0,0,0,alpha = 0.4), xlab="", ylab="Цена закрытия", main="Акции компании ORACLE")
-    
-    lines(Quotes_strategy[,9], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
-    lines(Quotes_strategy[,10], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE" )
-    
-    
-    
-    
-    intersections <- drawSquares(Quotes_strategy[,9:10], initx)
+    Quotes_strategy["Big"] <- Quotes_L[,big] 
+  
+    intersections <- drawSquares(Quotes_strategy[,9:10], initx, plot=FALSE)
     shallBuy <- FALSE
     if (Quotes_strategy[initx,9] < Quotes_strategy[initx,10]) shallBuy <-TRUE
     for (i in 1:NROW(intersections))
@@ -319,18 +308,15 @@ for (small in 1:(ncol(Quotes_S))) {
     result[nrow(result), 3] <- Quotes_strategy[nrow(Quotes_strategy),7]
     result[nrow(result), 4] <- Quotes_strategy[nrow(Quotes_strategy),8]
     result[nrow(result), 5] <- Quotes_strategy[nrow(Quotes_strategy), 7] + Quotes_strategy[nrow(Quotes_strategy),2]*Quotes_strategy[nrow(Quotes_strategy),8] - Quotes_strategy[1, 7]
-    Quotes_strategy<- Quotes_strategy[,-9]
-    Quotes_strategy <- Quotes_strategy[,-9]
+    Quotes_strategy<- Quotes_strategy[,-c(9,10)]
   
-  }}
+  }
+}
 
 
 
 
-
-
-
-
+result[which.max( result[,5] ),]
 
 
 

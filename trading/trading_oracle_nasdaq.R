@@ -128,7 +128,7 @@ legend("topleft", c("SMA-L", "EMA-L", "WMA-L"), col=c("red", "orange", "blue"), 
 
 
 
-#Графики для SMA-S и SMA-L:
+#Графики для EMA-S и EMA-L:
 drawSquares <- function(data, start, plot=FALSE){
   vec <- vector()
   notFirst = FALSE;
@@ -182,7 +182,7 @@ legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 Quotes$budget <- Quotes[NROW(Quotes),2]*500
 Quotes$papers <- 0
 initx <- 50
-intersections <- drawSquares(Quotes[,9:10], initx)
+intersections <- drawSquares(Quotes[,9:10], initx, plot = TRUE)
 shallBuy <- FALSE
 if (Quotes[initx,9] < Quotes[initx,10]) shallBuy <-TRUE
 for (i in 1:NROW(intersections))
@@ -313,16 +313,12 @@ for (small in 1:(ncol(Quotes_S))) {
   }
 }
 
-
-
-
-result[which.max( result[,5] ),]
-
-
-
-
-
-
+#result[which.max( result[,5] ),]
+#sort <- result[order(result$profit),]
+#for (i in 1:nrow(sort)) result[i,]  <- sort[nrow(sort) - i + 1,]
+#rm(sort)
+#
+#
 
 
 

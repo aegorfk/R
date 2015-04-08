@@ -214,119 +214,194 @@ legend("topleft", c("EMA-S", "EMA-L"), col=c("red", "orange"), lwd=2)
 
 #Попробуем добиться лучшего финансового результата, варьирую длительность окна усреднения:
 
-Quotes_S <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
-Quotes_L <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
-result <- data.frame(big = numeric(), small = numeric(), budget = numeric(), stock = numeric(), profit = numeric())
-
-
-for (small in 5:10) {
-  #SMA    
-  a <- ncol(Quotes_S)+1 #номер нашего испытания
-  for (i in small:nrow(Quotes_S)) Quotes_S[i,a] <- mean(Quotes_S[(i-(small - 1)):i,2])
-  colnames(Quotes_S)[ncol(Quotes_S)] <- paste("SMAS", small, sep=" ")
-
-  #EMA
-  Quotes_S[,ncol(Quotes_S) + 1] <- EMA(Quotes_S[,2], n=small, ratio = 1-((small-1)/(small+1)))
-  colnames(Quotes_S)[ncol(Quotes_S)] <- paste("EMAS", small, sep=" ")
-  
-  #WMA
-  Quotes_S[,ncol(Quotes_S) + 1] <- WMA(small, Quotes_S[, 2])
-  colnames(Quotes_S)[ncol(Quotes_S)] <- paste("WMAS", small, sep=" ")
-
- }
-
-
-for (big in 20:50) {
-  #SMA    
-  a <- ncol(Quotes_L)+1 #номер нашего испытания
-  for (i in big:nrow(Quotes_L)) Quotes_L[i,a] <- mean(Quotes_L[(i-(big - 1)):i,2])
-  colnames(Quotes_L)[ncol(Quotes_L)] <- paste("SMAL", big, sep=" ")
-  
-  #EMA
-  Quotes_L[,ncol(Quotes_L) + 1] <- EMA(Quotes_L[,2], n=big, ratio = 1-((big-1)/(big+1)))
-  colnames(Quotes_L)[ncol(Quotes_L)] <- paste("EMAL", big, sep=" ")
-  
-  #WMA
-  Quotes_L[,ncol(Quotes_L) + 1] <- WMA(big, Quotes_L[, 2])
-  colnames(Quotes_L)[ncol(Quotes_L)] <- paste("WMAL", big, sep=" ")
-    
-}
-
-
-
-
-Quotes_strategy <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
-#imitation game
-
-for (big in 1:6) {
-  Quotes_L <- Quotes_L[,-1]
-  Quotes_S <- Quotes_S[,-1]
-}
-
-
-
-#Игра в имитацию
-for (small in 1:(ncol(Quotes_S))) {
-  for (big in 1:(ncol(Quotes_L))) {
-    Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
-    Quotes_strategy$papers <- 0
-    for (i in 1:50) if(is.na(Quotes_L[i,big])) initx <- i +1
-  
-    Quotes_strategy["Small"] <- Quotes_S[,small] 
-    Quotes_strategy["Big"] <- Quotes_L[,big] 
-  
-    intersections <- drawSquares(Quotes_strategy[,9:10], initx, plot=FALSE)
-    shallBuy <- FALSE
-    if (Quotes_strategy[initx,9] < Quotes_strategy[initx,10]) shallBuy <-TRUE
-    for (i in 1:NROW(intersections))
-    {
-      if (shallBuy){
-        index <- intersections[i]
-        price <- Quotes_strategy[index,2]
-        budget <-  Quotes_strategy[index,7]
-        papers <-  budget  %/% price
-        budget <- budget %% price
-        Quotes_strategy[(index:(NROW(Quotes_strategy))),8]<-papers
-        Quotes_strategy[(index:(NROW(Quotes_strategy))),7]<-budget
-        shallBuy <- FALSE
-      }else{
-        if (!shallBuy){
-          index <- intersections[i]
-          price <- Quotes_strategy[index,2]
-          budget <-  Quotes_strategy[index,7] + price * Quotes_strategy[index,8]
-          papers <-  0
-          Quotes_strategy[(index:NROW(Quotes_strategy)),8]<-papers
-          Quotes_strategy[(index:NROW(Quotes_strategy)),7]<-budget
-          shallBuy <- TRUE
-        }
-      }
-    }
- 
-
-    result[nrow(result) + 1, 1] <- colnames(Quotes_L)[[big]]
-    result[nrow(result), 2] <- colnames(Quotes_S)[[small]]
-    result[nrow(result), 3] <- Quotes_strategy[nrow(Quotes_strategy),7]
-    result[nrow(result), 4] <- Quotes_strategy[nrow(Quotes_strategy),8]
-    result[nrow(result), 5] <- Quotes_strategy[nrow(Quotes_strategy), 7] + Quotes_strategy[nrow(Quotes_strategy),2]*Quotes_strategy[nrow(Quotes_strategy),8] - Quotes_strategy[1, 7]
-    Quotes_strategy<- Quotes_strategy[,-c(9,10)]
-  
-  }
-}
+# Quotes_S <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
+# Quotes_L <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
+# result <- data.frame(big = numeric(), small = numeric(), budget = numeric(), stock = numeric(), profit = numeric())
+# 
+# 
+# for (small in 5:10) {
+#   #SMA    
+#   a <- ncol(Quotes_S)+1 #номер нашего испытания
+#   for (i in small:nrow(Quotes_S)) Quotes_S[i,a] <- mean(Quotes_S[(i-(small - 1)):i,2])
+#   colnames(Quotes_S)[ncol(Quotes_S)] <- paste("SMAS", small, sep=" ")
+# 
+#   #EMA
+#   Quotes_S[,ncol(Quotes_S) + 1] <- EMA(Quotes_S[,2], n=small, ratio = 1-((small-1)/(small+1)))
+#   colnames(Quotes_S)[ncol(Quotes_S)] <- paste("EMAS", small, sep=" ")
+#   
+#   #WMA
+#   Quotes_S[,ncol(Quotes_S) + 1] <- WMA(small, Quotes_S[, 2])
+#   colnames(Quotes_S)[ncol(Quotes_S)] <- paste("WMAS", small, sep=" ")
+# 
+#  }
+# 
+# 
+# for (big in 20:50) {
+#   #SMA    
+#   a <- ncol(Quotes_L)+1 #номер нашего испытания
+#   for (i in big:nrow(Quotes_L)) Quotes_L[i,a] <- mean(Quotes_L[(i-(big - 1)):i,2])
+#   colnames(Quotes_L)[ncol(Quotes_L)] <- paste("SMAL", big, sep=" ")
+#   
+#   #EMA
+#   Quotes_L[,ncol(Quotes_L) + 1] <- EMA(Quotes_L[,2], n=big, ratio = 1-((big-1)/(big+1)))
+#   colnames(Quotes_L)[ncol(Quotes_L)] <- paste("EMAL", big, sep=" ")
+#   
+#   #WMA
+#   Quotes_L[,ncol(Quotes_L) + 1] <- WMA(big, Quotes_L[, 2])
+#   colnames(Quotes_L)[ncol(Quotes_L)] <- paste("WMAL", big, sep=" ")
+#     
+# }
+# 
+# 
+# 
+# 
+# Quotes_strategy <- subset(Quotes, select = c("date", "close", "volume",  "open", "high",  "low"))
+# #imitation game
+# 
+# for (big in 1:6) {
+#   Quotes_L <- Quotes_L[,-1]
+#   Quotes_S <- Quotes_S[,-1]
+# }
+# 
+# 
+# 
+# #Игра в имитацию
+# for (small in 1:(ncol(Quotes_S))) {
+#   for (big in 1:(ncol(Quotes_L))) {
+#     Quotes_strategy$budget <- Quotes_strategy[NROW(Quotes_strategy),2]*500
+#     Quotes_strategy$papers <- 0
+#     for (i in 1:50) if(is.na(Quotes_L[i,big])) initx <- i +1
+#   
+#     Quotes_strategy["Small"] <- Quotes_S[,small] 
+#     Quotes_strategy["Big"] <- Quotes_L[,big] 
+#   
+#     intersections <- drawSquares(Quotes_strategy[,9:10], initx, plot=FALSE)
+#     shallBuy <- FALSE
+#     if (Quotes_strategy[initx,9] < Quotes_strategy[initx,10]) shallBuy <-TRUE
+#     for (i in 1:NROW(intersections))
+#     {
+#       if (shallBuy){
+#         index <- intersections[i]
+#         price <- Quotes_strategy[index,2]
+#         budget <-  Quotes_strategy[index,7]
+#         papers <-  budget  %/% price
+#         budget <- budget %% price
+#         Quotes_strategy[(index:(NROW(Quotes_strategy))),8]<-papers
+#         Quotes_strategy[(index:(NROW(Quotes_strategy))),7]<-budget
+#         shallBuy <- FALSE
+#       }else{
+#         if (!shallBuy){
+#           index <- intersections[i]
+#           price <- Quotes_strategy[index,2]
+#           budget <-  Quotes_strategy[index,7] + price * Quotes_strategy[index,8]
+#           papers <-  0
+#           Quotes_strategy[(index:NROW(Quotes_strategy)),8]<-papers
+#           Quotes_strategy[(index:NROW(Quotes_strategy)),7]<-budget
+#           shallBuy <- TRUE
+#         }
+#       }
+#     }
+#  
+# 
+#     result[nrow(result) + 1, 1] <- colnames(Quotes_L)[[big]]
+#     result[nrow(result), 2] <- colnames(Quotes_S)[[small]]
+#     result[nrow(result), 3] <- Quotes_strategy[nrow(Quotes_strategy),7]
+#     result[nrow(result), 4] <- Quotes_strategy[nrow(Quotes_strategy),8]
+#     result[nrow(result), 5] <- Quotes_strategy[nrow(Quotes_strategy), 7] + Quotes_strategy[nrow(Quotes_strategy),2]*Quotes_strategy[nrow(Quotes_strategy),8] - Quotes_strategy[1, 7]
+#     Quotes_strategy<- Quotes_strategy[,-c(9,10)]
+#   
+#   }
+# }
 
 #result[which.max( result[,5] ),]
 #sort <- result[order(result$profit),]
 #for (i in 1:nrow(sort)) result[i,]  <- sort[nrow(sort) - i + 1,]
 #rm(sort)
-#
-#
-
-
-
-
-
-
-
-
 #rm(Quotes_ORCL_S,Quotes_ORCL_L, result)
-#rmarkdown::render("trading_oracle_nasdaq.Rmd")
+
+
+
+
+
+# сделки с плечом и короткие сделки
+Quotes_new <- subset(Quotes, select = c("date", "close",  "open", "high",  "low"))
+for (i in 10:nrow(Quotes_new)) Quotes_new[i,6] <- mean(Quotes_new[(i-9):i,2])
+colnames(Quotes_new)[6] <- "SMAS 10"
+for (i in 29:nrow(Quotes)) Quotes_new[i,7] <- mean(Quotes_new[(i-28):i,2])
+colnames(Quotes_new)[7] <- "SMAL 29"
+plot(Quotes_new[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE (лучшая стратегия)", ylim=c(10,16) )
+lines(Quotes_new[1:300,6], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE (лучшая стратегия)" )
+lines(Quotes_new[1:300,7], type="l", lwd=2, col="orange", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE (лучшая стратегия)" )
+intersections <- drawSquares(Quotes_new[,6:7], initx, plot = TRUE)
+legend("topleft", c("SMA-S 10", "SMA-L 29"), col=c("blue", "orange"), lwd=4)
+
+
+
+Quotes_new$budget <- Quotes_new[NROW(Quotes_new),2]*500
+Quotes_new$papers <- 0
+Quotes_new$budget_our <- Quotes_new[NROW(Quotes_new),2]*500
+Quotes_new$papers_our <- 0
+
+
+initx <- 29
+сredit <- 0
+stocks <- 0 
+shallBuy <- FALSE
+
+if (Quotes_new[initx,6] < Quotes_new[initx,7]) shallBuy <-TRUE
+for (i in 1:NROW(intersections))
+{
+  if (shallBuy){
+    index <- intersections[i]
+    price <- Quotes_new[index,2]
+    budget <-  Quotes_new[index,8]
+    budget_new <- Quotes_new[index,10]
+    credit <- budget_new
+    papers <- budget  %/% price
+    budget <- budget %% price
+    papers_new <- ((budget_new*2*0.92)  %/% price) - stocks
+    budget_new <- (budget_new*2*0.92) %% price
+    # вот тут мы покупаем что-то на наши средства
+    Quotes_new[((index + 1):(NROW(Quotes_new))),8]<-budget
+    Quotes_new[((index + 1):(NROW(Quotes_new))),9]<-papers
+    Quotes_new[((index + 1):(NROW(Quotes_new))),10] <- budget_new
+    Quotes_new[((index + 1):(NROW(Quotes_new))),11] <- papers_new
+
+    
+    shallBuy <- FALSE
+  }else{
+    if (!shallBuy){
+      index <- intersections[i]
+      price <- Quotes_new[index,2]
+      budget <-  Quotes_new[index,8] + price * Quotes_new[index,9]
+      budget_new <-  (Quotes_new[index,10] + price * Quotes_new[index,11])*0.92 - credit
+      papers <-  0
+      papers_new <- Quotes_new[,11]*2
+      stocks <- Quotes_new[,11]
+        
+      Quotes_new[((index + 1):NROW(Quotes_new)),8] <- budget
+      Quotes_new[((index + 1):NROW(Quotes_new)),9] <- papers
+          
+      Quotes_new[((index + 1):NROW(Quotes_new)),10] <- budget_new
+      Quotes_new[((index + 1):NROW(Quotes_new)),11] <- papers_new
+      
+            
+      shallBuy <- TRUE
+    }
+  }
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+rmarkdown::render("trading_oracle_nasdaq.Rmd")
 

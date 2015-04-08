@@ -349,23 +349,24 @@ stocks <- 0
 shallBuy <- FALSE
 
 if (Quotes_new[initx,6] < Quotes_new[initx,7]) shallBuy <-TRUE
-for (i in 1:NROW(intersections))
+for (i in 1:NROW(intersections) -1 )
 {
   if (shallBuy){
     index <- intersections[i]
     price <- Quotes_new[index,2]
     budget <-  Quotes_new[index,8]
-    budget_new <- Quotes_new[index,10]
-    credit <- budget_new
+    budget_new <- Quotes_new[index,10]*2*0.92
+    credit <- Quotes_new[index,10]
+    
     papers <- budget  %/% price
     budget <- budget %% price
-    papers_new <- ((budget_new*2*0.92)  %/% price) - stocks
-    budget_new <- (budget_new*2*0.92) %% price
+    papers_new <- (budget_new  %/% price) - stocks
+    budget_new <- budget_new %% price
     # вот тут мы покупаем что-то на наши средства
     Quotes_new[((index + 1):(NROW(Quotes_new))),8]<-budget
     Quotes_new[((index + 1):(NROW(Quotes_new))),9]<-papers
-    Quotes_new[((index + 1):(NROW(Quotes_new))),10] <- budget_new
-    Quotes_new[((index + 1):(NROW(Quotes_new))),11] <- papers_new
+    Quotes_new[(index:(NROW(Quotes_new))),10] <- budget_new
+    Quotes_new[(index:(NROW(Quotes_new))),11] <- papers_new
 
     
     shallBuy <- FALSE
@@ -373,17 +374,17 @@ for (i in 1:NROW(intersections))
     if (!shallBuy){
       index <- intersections[i]
       price <- Quotes_new[index,2]
-      budget <-  Quotes_new[index,8] + price * Quotes_new[index,9]
-      budget_new <-  (Quotes_new[index,10] + price * Quotes_new[index,11])*0.92 - credit
+     budget <-  Quotes_new[index,8] + price * Quotes_new[index,9]
+     budget_new <-  (Quotes_new[index,10] + price * Quotes_new[index,11])*0.92
       papers <-  0
-      papers_new <- Quotes_new[,11]*2
-      stocks <- Quotes_new[,11]
+       papers_new <- Quotes_new[,11]*2 
+       stocks <- Quotes_new[,11] - stocks
         
-      Quotes_new[((index + 1):NROW(Quotes_new)),8] <- budget
-      Quotes_new[((index + 1):NROW(Quotes_new)),9] <- papers
+      Quotes_new[((index +1):NROW(Quotes_new)),8] <- budget
+      Quotes_new[((index +1):NROW(Quotes_new)),9] <- papers
           
-      Quotes_new[((index + 1):NROW(Quotes_new)),10] <- budget_new
-      Quotes_new[((index + 1):NROW(Quotes_new)),11] <- papers_new
+       Quotes_new[((index +1):NROW(Quotes_new)),10] <- budget_new
+       Quotes_new[((index +1):NROW(Quotes_new)),11] <- papers_new
       
             
       shallBuy <- TRUE
@@ -391,13 +392,6 @@ for (i in 1:NROW(intersections))
   }
   
 }
-
-
-
-
-
-
-
 
 
 

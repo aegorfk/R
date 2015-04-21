@@ -77,7 +77,7 @@ calcStats <- function(scores){
 
 
 
-setup_twitter_oauth("BfoP1LtBMdghX1ULzfHNI93zI","wNPYpa0hyRQHbAa5cce8KFhLz7AAArle7YK2XNt4vWU96YyYT2","168628773-lhgkkgzHG8R5ZJuagQuWnpPDyHZJmd5I4BIFwJGL","2gROpJPcJLXj1qRe3C7jK4fp7p7pzSJfkCCGU32cVjgRj")
+setup_twitter_oauth("xj5dwldlOwbxAy4GV0BFU3Y7C","emqDnvVHnxfWX2HpZ9K4VDarJvRQztwrpJvQ2aruKcydboAik1","168628773-lhgkkgzHG8R5ZJuagQuWnpPDyHZJmd5I4BIFwJGL","2gROpJPcJLXj1qRe3C7jK4fp7p7pzSJfkCCGU32cVjgRj")
 pos <- scan("positive-words.txt", what = "character")
 neg <- scan("negative-words.txt", what = "character")
 

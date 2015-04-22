@@ -328,6 +328,7 @@ Quotes_new <- subset(Quotes, select = c("date", "close",  "open", "high",  "low"
 for (i in 10:nrow(Quotes_new)) Quotes_new[i,6] <- mean(Quotes_new[(i-9):i,2])
 colnames(Quotes_new)[6] <- "SMAS 10"
 for (i in 29:nrow(Quotes)) Quotes_new[i,7] <- mean(Quotes_new[(i-28):i,2])
+initx <- 29
 colnames(Quotes_new)[7] <- "SMAL 29"
 plot(Quotes_new[1:300,2], type="l", lwd=2, col="red", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE (лучшая стратегия)", ylim=c(10,16) )
 lines(Quotes_new[1:300,6], type="l", lwd=2, col="blue", xlab="Наблюдения", ylab="Цена закрытия", main="Акции компании ORACLE (лучшая стратегия)" )
@@ -339,60 +340,66 @@ legend("topleft", c("SMA-S 10", "SMA-L 29"), col=c("blue", "orange"), lwd=4)
 
 Quotes_new$budget <- Quotes_new[NROW(Quotes_new),2]*500
 Quotes_new$papers <- 0
-Quotes_new$budget_our <- Quotes_new[NROW(Quotes_new),2]*500
-Quotes_new$papers_our <- 0
+Quotes_new$budget_credit <- 0
+Quotes_new$papers_credit <- 0
 
 
-initx <- 29
+
 сredit <- 0
 stocks <- 0 
 shallBuy <- FALSE
 
 if (Quotes_new[initx,6] < Quotes_new[initx,7]) shallBuy <-TRUE
-for (i in 1:NROW(intersections) -1 )
+for (i in 1:NROW(intersections) )
 {
+  index <- intersections[i]
   if (shallBuy){
-    index <- intersections[i]
+    
     price <- Quotes_new[index,2]
     budget <-  Quotes_new[index,8]
-    budget_new <- Quotes_new[index,10]*2*0.92
-    credit <- Quotes_new[index,10]
+    papers <- Quotes_new[index,9]
+    budget_credit <- Quotes_new[index,10]
+    papers_credit <- Quotes_new[index,11]
     
-    papers <- budget  %/% price
-    budget <- budget %% price
-    papers_new <- (budget_new  %/% price) - stocks
-    budget_new <- budget_new %% price
+    
+    papers <- ( 0.9992 * budget * 2 ) %/% price
+    payment <- papers * price * 1.0008
+    budget <- budget - payment/2
+    budget_credit <- budget_credit + payment / 2
+    papers <- papers - papers_credit
+    papers_credit <- 0
+    
     # вот тут мы покупаем что-то на наши средства
-    Quotes_new[((index + 1):(NROW(Quotes_new))),8]<-budget
-    Quotes_new[((index + 1):(NROW(Quotes_new))),9]<-papers
-    Quotes_new[(index:(NROW(Quotes_new))),10] <- budget_new
-    Quotes_new[(index:(NROW(Quotes_new))),11] <- papers_new
-
+    Quotes_new[((index+1):(NROW(Quotes_new))),8]<-budget
+    Quotes_new[((index+1):(NROW(Quotes_new))),9]<-papers
+    Quotes_new[((index+1):(NROW(Quotes_new))),10] <- budget_credit
+    Quotes_new[((index+1):(NROW(Quotes_new))),11] <- papers_credit
+    
     
     shallBuy <- FALSE
   }else{
-    if (!shallBuy){
-      index <- intersections[i]
-      price <- Quotes_new[index,2]
-     budget <-  Quotes_new[index,8] + price * Quotes_new[index,9]
-     budget_new <-  (Quotes_new[index,10] + price * Quotes_new[index,11])*0.92
-      papers <-  0
-       papers_new <- Quotes_new[,11]*2 
-       stocks <- Quotes_new[,11] - stocks
-        
-      Quotes_new[((index +1):NROW(Quotes_new)),8] <- budget
-      Quotes_new[((index +1):NROW(Quotes_new)),9] <- papers
-          
-       Quotes_new[((index +1):NROW(Quotes_new)),10] <- budget_new
-       Quotes_new[((index +1):NROW(Quotes_new)),11] <- papers_new
-      
-            
-      shallBuy <- TRUE
-    }
-  }
-  
+    price <- Quotes_new[index,2]
+    budget <-  Quotes_new[index,8]
+    papers <- Quotes_new[index,9]
+    budget_credit <- Quotes_new[index,10]
+    papers_credit <- Quotes_new[index,11]
+    
+    papers_credit <- papers_credit + papers
+    budget <- papers * 2 * price * 0.9992 + budget - budget_credit
+    budget_credit <- 0
+    papers <- 0
+    
+    Quotes_new[((index+1):(NROW(Quotes_new))),8]<-budget
+    Quotes_new[((index+1):(NROW(Quotes_new))),9]<-papers
+    Quotes_new[((index+1):(NROW(Quotes_new))),10] <- budget_credit
+    Quotes_new[((index+1):(NROW(Quotes_new))),11] <- papers_credit
+    
+    
+    shallBuy <- TRUE     
+  }  
 }
 
+Quotes_new$balance <- ( Quotes_new$papers - Quotes_new$papers_credit ) *Quotes_new$close + Quotes_new$budget - Quotes_new$budget_credit
 
 
 

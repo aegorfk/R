@@ -17,9 +17,46 @@ library(XML)
 library(doParallel)
 
 
+#Парсим все категории наши
+apple_start_page <- html("http://itunes.apple.com/us/genre/ios-reference/id6006?mt=8")
+apple_category <- apple_start_page %>% html_nodes(".top-level-genre") %>% html_text()
+apple_category_link<- apple_start_page %>% html_nodes(".top-level-genre") %>% html_attr("href")
+categories <- as.data.frame(cbind(as.character(apple_category), apple_category_link))
+
+
+
+
+#Разбивка для машин
+category <- c("Books", "Business", "Catalogs", "Education")
+apple_category_link <- c("https://itunes.apple.com/us/genre/ios-books/id6018?mt=8", "https://itunes.apple.com/us/genre/ios-business/id6000?mt=8", "https://itunes.apple.com/us/genre/ios-catalogs/id6022?mt=8", "https://itunes.apple.com/us/genre/ios-education/id6017?mt=8")
+categories <- data.frame(category, apple_category_link)
+
+
+category <- c("Entertainment", "Finance", "Food & Drink", "Games")
+apple_category_link <- c("https://itunes.apple.com/us/genre/ios-entertainment/id6016?mt=8", "https://itunes.apple.com/us/genre/ios-finance/id6015?mt=8", "https://itunes.apple.com/us/genre/ios-food-drink/id6023?mt=8", "https://itunes.apple.com/us/genre/ios-games/id6014?mt=8")
+categories <- data.frame(category, apple_category_link)
+
+
 category <- c("Health & Fitness", "Lifestyle", "Medical", "Music")
 apple_category_link <- c("https://itunes.apple.com/us/genre/ios-health-fitness/id6013?mt=8", "https://itunes.apple.com/us/genre/ios-lifestyle/id6012?mt=8", "https://itunes.apple.com/us/genre/ios-medical/id6020?mt=8", "https://itunes.apple.com/us/genre/ios-music/id6011?mt=8")
 categories <- data.frame(category, apple_category_link)
+
+
+category <- c("Navigation", "News", "Newsstand", "Photo & Video")
+apple_category_link <- c("https://itunes.apple.com/us/genre/ios-navigation/id6010?mt=8", "https://itunes.apple.com/us/genre/ios-news/id6009?mt=8", "https://itunes.apple.com/us/genre/ios-newsstand/id6021?mt=8", "https://itunes.apple.com/us/genre/ios-photo-video/id6008?mt=8")
+categories <- data.frame(category, apple_category_link)
+
+category <- c("Productivity", "Reference", "Social Networking", "Sports")
+apple_category_link <- c("https://itunes.apple.com/us/genre/ios-productivity/id6007?mt=8", "https://itunes.apple.com/us/genre/ios-reference/id6006?mt=8", "https://itunes.apple.com/us/genre/ios-social-networking/id6005?mt=8", "https://itunes.apple.com/us/genre/ios-sports/id6004?mt=8")
+categories <- data.frame(category, apple_category_link)
+
+
+category <- c("Travel", "Utilities", "Weather")
+apple_category_link <- c("https://itunes.apple.com/us/genre/ios-travel/id6003?mt=8", "https://itunes.apple.com/us/genre/ios-utilities/id6002?mt=8", "https://itunes.apple.com/us/genre/ios-weather/id6001?mt=8")
+categories <- data.frame(category, apple_category_link)
+
+
+
 alfabet <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","*")
 apps <- data.frame(app_name = character(0), app_link = character(0))
 cl <- makeCluster(4, outfile="") # Register cluster

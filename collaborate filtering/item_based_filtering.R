@@ -1,4 +1,4 @@
-data <- read.csv(file="matrix.csv")
+data <- read.csv(file="Data.csv")
 
 #Item Based Collaborative Filtering
 data.ibs <- (data[,!(names(data) %in% c("user"))])
@@ -13,8 +13,6 @@ data.ibs.similarity  <- matrix(NA, nrow=ncol(data.ibs), ncol=ncol(data.ibs),
                            dimnames=list(colnames(data.ibs), colnames(data.ibs)))
 
 
-# Lets fill in those empty spaces with cosine similarities
-# Loop through the columns
 for(i in 1:ncol(data.ibs)) {
   # Loop through the columns for each column
   for(j in 1:ncol(data.ibs)) {
@@ -33,4 +31,54 @@ for(i in 1:ncol(data.ibs))
   data.neighbours[i,] <- (t(head(n=11,rownames(data.ibs.similarity[order(data.ibs.similarity[,i],decreasing=TRUE),][i]))))
 }
 
+
+#User Based Collaborative Filtering
+getScore <- function(history, similarities)
+{
+  x <- sum(history*similarities)/sum(similarities)
+  x
+}
+
+holder <- matrix(NA, nrow=nrow(data),ncol=ncol(data)-1,dimnames=list((data$user),colnames(data[-1])))
+
+
+
+
+# проходимся по пользователям (по строкам)
+for(i in 1:nrow(holder)) 
+{
+  # проходимся по колонкам-объектам
+  for(j in 1:ncol(holder)) 
+  {
+    # считываем значение строки и стобца, которые показывают конкретного пользователя и объект
+    user <- rownames(holder)[i]
+    product <- colnames(holder)[j]
+    
+    # Чтобы не рекомендовать продукт, который уже попробовали, заменяем его пустой строкой
+ 
+    if(as.integer(data[data$user==user,product]) == 1)
+    { 
+      holder[i,j]<-""
+    } else {
+      
+      # Берем 10 соседей
+      topN<-((head(n=11,(data.ibs.similarity[order(data.ibs.similarity[,product],decreasing=TRUE),][product]))))
+      topN.names <- as.character(rownames(topN))
+      topN.similarities <- as.numeric(topN[,1])
+      topN.similarities<-topN.similarities[-1]
+      topN.names<-topN.names[-1]
+      
+      # смотрим историю пользователя
+      topN.purchases<- data[,c("user",topN.names)]
+      topN.userPurchases<-topN.purchases[topN.purchases$user==user,]
+      topN.userPurchases <- as.numeric(topN.userPurchases[!(names(topN.userPurchases) %in% c("user"))])
+      
+      # вычисляем рейтинг пользователя и объекта
+      holder[i,j]<-getScore(similarities=topN.similarities,history=topN.userPurchases)
+      
+    } 
+  }
+}
+
+data.user.scores <- holder
 

@@ -9,6 +9,7 @@ output: word_document
 В коллаборативной фильтрации, в методе item-based, нам не важно, какой ID у пользователя, но мы понимаем, что за каждой строкой подразумевается какой-то пользователь. Считываем данные и удаляет столбец:
 ```{r}
 data <- read.csv(file="Data.csv")
+data$X <- NULL
 #Удаляем столбец с номерами пользователей
 data.ibs <- (data[,!(names(data) %in% c("X", "user"))])
 ```
@@ -54,9 +55,10 @@ for(i in 1:ncol(data.ibs))
 ```
 
 
-В user-based подходе процесс похож. Задача формулируется следующим образом: Как понять, понравится ли новому пользователю определенный объект? Нужно просто найти других пользователей, похожих на данного, и посмотреть, как они восприняли этот обект.
 
-Мы берем обект и смотрим, какие пользователи его выбрали, затем находим соседей-пользователей с такими же интересами. Затем мы создаем рейтинг объекста для пользователя по формуле: sumproduct(purchaseHistory, similarities)/sum(similarities).
+В user-based подходе процесс похож. Задача формулируется следующим образом: Как понять, понравится ли новому пользователю определенный объект? Нужно просто найти других пользователей, похожих на данного, и посмотреть, как они восприняли этот объект.
+
+Мы берем обект и смотрим, какие пользователи его выбрали, затем находим соседей-пользователей с такими же интересами. Затем мы создаем рейтинг объекта для пользователя по формуле: sumproduct(purchaseHistory, similarities)/sum(similarities).
 
 ```{r}
 getScore <- function(history, similarities)
@@ -67,6 +69,55 @@ getScore <- function(history, similarities)
 
 holder <- matrix(NA, nrow=nrow(data),ncol=ncol(data)-1,dimnames=list((data$user),colnames(data[-1])))
 
+for(i in 1:nrow(holder)) 
+{
+  # Loops through the products (columns)
+  for(j in 1:ncol(holder)) 
+  {
+    # Get the user's name and th product's name
+    # We do this not to conform with vectors sorted differently 
+    user <- rownames(holder)[i]
+    product <- colnames(holder)[j]
+    
+    # We do not want to recommend products you have already consumed
+    # If you have already consumed it, we store an empty string
+    if(as.integer(data[data$user==user,product]) == 1)
+    { 
+      holder[i,j]<-""
+    } else {
+      
+      # We first have to get a product's top 10 neighbours sorted by similarity
+      topN<-((head(n=11,(data.ibs.similarity[order(data.ibs.similarity[,product],decreasing=TRUE),][product]))))
+      topN.names <- as.character(rownames(topN))
+      topN.similarities <- as.numeric(topN[,1])
+      
+      # Drop the first one because it will always be the same song
+      topN.similarities<-topN.similarities[-1]
+      topN.names<-topN.names[-1]
+      
+      # We then get the user's purchase history for those 10 items
+      topN.purchases<- data[,c("user",topN.names)]
+      topN.userPurchases<-topN.purchases[topN.purchases$user==user,]
+      topN.userPurchases <- as.numeric(topN.userPurchases[!(names(topN.userPurchases) %in% c("user"))])
+      
+      # We then calculate the score for that product and that user
+      holder[i,j]<-getScore(similarities=topN.similarities,history=topN.userPurchases)
+      
+    } # close else statement
+  } # end product for loop   
+} # end user for loop
 
+data.user.scores <- holder
+```
+
+
+Проранжируем наши рекомендации:
+
+```{r}
+data.germany.user.scores.holder <- matrix(NA, nrow=nrow(data.germany.user.scores),ncol=100,dimnames=list(rownames(data.germany.user.scores)))
+for(i in 1:nrow(data.germany.user.scores)) 
+{
+  data.germany.user.scores.holder[i,] <- names(head(n=100,(data.germany.user.scores[,order(data.germany.user.scores[i,],decreasing=TRUE)])[i,]))
+}
 ```
 

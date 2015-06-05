@@ -1,4 +1,6 @@
 data <- read.csv(file="Data.csv")
+data.germany$X <- NULL
+
 
 #Item Based Collaborative Filtering
 data.ibs <- (data[,!(names(data) %in% c("user"))])
@@ -82,3 +84,9 @@ for(i in 1:nrow(holder))
 
 data.user.scores <- holder
 
+
+data.germany.user.scores.holder <- matrix(NA, nrow=nrow(data.germany.user.scores),ncol=100,dimnames=list(rownames(data.germany.user.scores)))
+for(i in 1:nrow(data.germany.user.scores)) 
+{
+  data.germany.user.scores.holder[i,] <- names(head(n=100,(data.germany.user.scores[,order(data.germany.user.scores[i,],decreasing=TRUE)])[i,]))
+}

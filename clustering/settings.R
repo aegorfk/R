@@ -1,0 +1,5 @@
+install.packages('devtools')
+devtools::install_github('rstudio/shinyapps')
+shinyapps::setAccountInfo(name='dmitrii', token='FEA9FD65A9E8820857779B37463B9D59', secret='VNL9sFMPmLb/07TD2t0HiVwH2Ryj0dTJ/JFYikd6')
+library(shinyapps)
+install.packages(c('ggplot2', 'shiny'))

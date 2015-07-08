@@ -1,9 +1,8 @@
-#Чтобы уметь загружать пакеты из R
-
-
+#install R 3.2.1
+sudo add-apt-repository ppa:marutter/rrutter
 sudo apt-get update
-
-sudo apt-get install r-base
+sudo apt-get upgrade
+sudo apt-get install r-base r-base-dev
 
 sudo apt-get -y build-dep libcurl4-gnutls-dev
 sudo apt-get -y install libcurl4-gnutls-dev

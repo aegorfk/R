@@ -8,7 +8,12 @@ runtime: shiny
 
 
 ```{r ,echo=FALSE,message=F}
-#install.packages("Cairo")
+# install.packages("Cairo")
+# install.packages("shinyRGL")
+# install.packages("rgl")
+# install.packages("Quandl")
+# install.packages("knitr")
+# install.packages("jpeg")
 library(Cairo)
 options(shiny.usecairo=T)
 options(rgl.useNULL=TRUE)

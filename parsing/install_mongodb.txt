@@ -1,0 +1,181 @@
+#Sharding scheme
+#ssh root@10.5.5.13* / P0lice$oft
+#10.5.5.134:27019 - Config Server 1
+#10.5.5.135:27019 - Config Server 2
+#10.5.5.136:27019 - Config Server 3
+#10.5.5.137:27017 - mongos(Router) Может стоять на .136 ИЛИ Shard0
+#10.5.5.138:27017 - Shard1
+#10.5.5.139:27017 - Shard2
+
+#10.5.6.177
+#10.5.6.2
+#10.5.6.95
+#10.5.6.238
+#10.5.7.224
+
+
+
+#Запуск реплики
+Записать в /etc/hosts для связи между серверами, которые объединяются в реплику
+10.5.6.2 centos3
+10.5.6.95 centos4
+10.5.6.238 centos8
+
+
+# Install MongoDB on CentOS http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/
+# Configure the package management system (YUM)
+touch /etc/yum.repos.d/mongodb.repo
+echo [mongodb] >> /etc/yum.repos.d/mongodb.repo
+echo name=MongoDB Repository >> /etc/yum.repos.d/mongodb.repo
+echo baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64/ >> /etc/yum.repos.d/mongodb.repo
+echo gpgcheck=0 >> /etc/yum.repos.d/mongodb.repo
+echo enabled=1 >> /etc/yum.repos.d/mongodb.repo
+
+# Install the MongoDB packages and associated tools.
+sudo yum install -y mongodb-org
+
+# Stop blocking service
+sudo service iptables stop
+
+# Check all services that are running
+service --status-all
+
+#Перед началом выполнить на каждом сервере:
+cd ..
+rm -rf data/configdb/*
+sudo service iptables stop
+sudo service mongod stop
+
+
+
+#!!!!!!!!!!!!
+# !!!!!!!!!!!  ВАЖНО Change listening ip
+sudo chown azureuser /etc/mongod.conf 
+cd /etc
+cat > mongod.conf
+# 2. change bind_ip=0.0.0.0
+# 3. чтобы выйти :wq
+
+
+
+
+
+#Start service: 
+sudo service mongod start
+
+#################################################################################################
+### Deploying a sharded cluster: http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster ###
+#################################################################################################
+
+### Start the Config Server Database Instances ##################################################
+#Сделать для каждого из 3х серверов
+# 1.Create data directories for each of the three config server instances
+mkdir /data/configdb
+
+# 2. Start the three config server instances.
+#    mongod --configsvr --dbpath <path> --port <port>
+mongod --configsvr --dbpath /data/configdb --port 27019 
+
+### Start the mongos Instances ##################################################################
+# mongos --configdb <config server hostnames>
+
+# стандартный порт mongos'a - 27017
+# ВАЖНО! перед запуском необходимо привести конфиг-сервера в одинаковое состояние - 
+# выключить все, удалить все файлы из папок /data/configdb
+mongos --configdb 10.5.5.136:27019
+
+# для 3х конфиг-серверов. можно запускать mongos на одном из серверов mongod(конфиг-сервер)
+# например, выполняем на 10.5.5.136
+mongos --configdb 10.5.5.134:27019,10.5.5.135:27019,10.5.5.136:27019
+
+#If it says something about error with adress use this
+sudo service mongod stop
+#and try again command "mongos --..."
+
+### Add Shards to the Cluster¶ ###################################################################
+
+# 1. Connect to the mongos instance
+# mongo --host mongos0.example.net --port 27017
+sudo service mongod start
+mongo --host 10.5.5.136 --port 27017 # адрес mongos, может стоять на .137
+
+# 2. Add each shard to the cluster using the sh.addShard() method
+sh.addShard( "10.5.5.138:27017" )
+
+# для добавления реплика шарда (на продакшене все шарды должны быть репликами)
+sh.addShard( "rs1/10.5.5.138:27017" )
+
+
+# Enable Sharding for a Database
+mongo --host <hostname of machine running mongos> --port <port mongos listens on>
+sh.enableSharding("<database>")
+
+# Enable Sharding for a Collection
+sh.shardCollection("<database>.<collection>", shard-key-pattern)
+sh.shardCollection("records.people", { "zipcode": 1, "name": 1 } )
+sh.shardCollection("benchmark.Event", { "_id": "hashed" } )
+
+
+
+
+Моя нотка
+Базовая установка ядра СУБД на все сервера Ubuntu LTS 14 (Cloud - Azure)
+Installation Guide (http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/)
+Предварительно перебросили RSA ключи, чтобы сервера могли общаться друг с другом(делаем c каждого сервака на каждый):
+> ssh-keygen -t rsa -P ''
+//Копируем директорию, которую он предлагает в скобках
+> cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+> ssh-copy-id -i $HOME/.ssh/id_rsa.pub azureuser@apptractorhd2.cloudapp.net
+> ssh-copy-id -i $HOME/.ssh/id_rsa.pub azureuser@apptractorhd3.cloudapp.net
+> ssh-copy-id -i $HOME/.ssh/id_rsa.pub azureuser@apptractorhd4.cloudapp.net
+> ssh-copy-id -i $HOME/.ssh/id_rsa.pub azureuser@apptractorhd5.cloudapp.net
+
+//Начали ставить базу:
+
+> sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+
+
+> echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+
+> sudo apt-get update
+
+> sudo apt-get install -y mongodb-org
+
+
+> echo "mongodb-org hold" | sudo dpkg --set-selections
+> echo "mongodb-org-server hold" | sudo dpkg --set-selections
+> echo "mongodb-org-shell hold" | sudo dpkg --set-selections
+> echo "mongodb-org-mongos hold" | sudo dpkg --set-selections
+> echo "mongodb-org-tools hold" | sudo dpkg --set-selections
+
+//База автоматически стартуется
+//Работает ли:
+ps -edaf | grep mongo
+service mongod status
+
+//Стопаем: sudo service mongod stop
+//восстановление владельца директорий (если требуется):
+//sudo killall mongod
+sudo chown -R mongodb.mongodb /var/lib/mongodb
+sudo -u mongodb rm /var/lib/mongodb/mongod.lock
+sudo -u mongodb mongod -f /etc/mongod.conf --repair
+tail -n 100 -f /var/log/mongodb/mongod.log
+sudo -u mongodb mongod -f /etc/mongod.conf 
+
+
+
+На конфиг серверах:
+sudo rm -rf /data/configdb
+sudo mkdir -p /data/configdb
+sudo chown -R mongodb:mongodb /data
+sudo chown -R mongodb:mongodb /var/lib/mongodb
+mongod --configsvr --dbpath /data/configdb --port 27019
+
+На data-серверах:
+sudo service ufw stop
+
+mongos --configdb rkatelyapina4.cloudapp.net:27019,rkatelyapina3.cloudapp.net:27019,rkatelyapina9.cloudapp.net:27019 -port 27017
+
+Делаем шарды:
+mongo --host rkatelyapina3.cloudapp.net --port 27017
+

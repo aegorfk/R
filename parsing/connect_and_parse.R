@@ -6,11 +6,10 @@ library(rmongodb)
 library(jsonlite)
 
 
-
 readUrl <- function(url) {
   out <- tryCatch(
 { 
-  html(url)
+  read_html(url)
 },
 error=function(cond) {
   message(paste("URL does not seem to exist:", url))
@@ -31,7 +30,7 @@ finally={
   )
 }
 
-apps_all <- readRDS("Books.RDS")
+apps_all <- readRDS("Education.RDS")
 apps_all <- apps_all[1:3]
 apps_all$app_link <- as.character(apps_all$app_link)
 apps_all$app_name <- as.character(apps_all$app_name)
@@ -41,7 +40,7 @@ mongo <- mongo.create(host = "rkatelyapina9.cloudapp.net",name = "", db = "test"
 mongo.is.connected(mongo)
 
 
-for (a in 22893:nrow(apps_all)) {
+for (a in 1:nrow(apps_all)) {
   
   rating_1 <- NA
   rating_2 <- NA
@@ -258,7 +257,7 @@ for (a in 22893:nrow(apps_all)) {
                    second_category = second_category, current_rating = current_rating,
                    current_reviews = current_reviews, description = description, icon = icon, price = price,
                    rated = rated, release = release, requires = requires, seller = seller, site = site,
-                   support = support, total_rating = total_rating, total_reviews = total_reviews, 
+                   support = support, size = size, total_rating = total_rating, total_reviews = total_reviews, 
                    update = as.POSIXct(update, tz='MSK'), updated = updated, version = version, compatible_iPad = compatible_iPad,
                    compatible_iPhone = compatible_iPhone, compatible_iPod = compatible_iPod, watch = watch,
                    optimized_iPhone_5 = optimized_iPhone_5, optimized_iPhone_6 = optimized_iPhone_6, 
@@ -269,6 +268,7 @@ for (a in 22893:nrow(apps_all)) {
                    review_1 = review_1, review_2 = review_2, review_3 = review_3)
       bson <- mongo.bson.from.list(list)
       mongo.insert(mongo, "test.apps", bson)
+      message(paste("Added URL:", apps_all$app_link[a]))
     }
   }}
 #rm(compatible,current_page,current_rating,description,language,price,rated,rating,requires,review,seller,size,total_rating,watch, current_reviews, total_reviews,another_apps,id2,ids,ids_simple,simple_apps)

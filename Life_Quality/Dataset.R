@@ -2,6 +2,10 @@
 library("ggplot2")
 #install.packages("Hmisc", dependencies = TRUE)
 library(Hmisc)
+#install.packages("car", dependencies = TRUE)
+library(car)
+#install.packages("lmtest", dependencies = TRUE)
+library(lmtest)
 
 Sys.setenv(LANG = "en")
 
@@ -81,5 +85,8 @@ corstarsl(data.matrix(x));
 data_reg <- lm(Quality ~ Consumption + Life_duration + CO2 + Research_Development + Illiteracy + Crimes, data = data)
 summary(data_reg)
 plot(data_reg)
+
+#DW test
+dwtest(data_reg)
 
 

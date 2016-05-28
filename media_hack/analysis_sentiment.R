@@ -12,6 +12,18 @@ install.packages("neuralnet", dependencies = TRUE)
 install.packages("qdap", dependencies = TRUE)
 library(qdap)
 
+#Theory: http://sentdex.com/sentiment-analysis/
+#http://fastml.com/classifying-text-with-bag-of-words-a-tutorial/
+#http://bookworm.benschmidt.org/posts/2015-10-25-Word-Embeddings.html
+#https://github.com/bmschmidt/wordVectors#creating-text-vectors
+#https://github.com/infoculture/mediahack2016
+#http://mediametrics.ru/info/developers.html
+#http://ling.go.mail.ru/
+
+
+
+
+
 articles <- read.csv("articles.csv",header = TRUE, sep = ";")
 articles$ton <- 0
 for (i in 1:NROW(articles)){

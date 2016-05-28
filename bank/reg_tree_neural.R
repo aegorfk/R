@@ -21,7 +21,7 @@ library("C50")
 library("neuralnet")
 #install.packages("knitr", dependencies = TRUE)
 library("knitr")
-install.packages("ROCR", dependencies = TRUE)
+#install.packages("ROCR", dependencies = TRUE)
 library("ROCR")
 #install.packages("Hmisc", dependencies = TRUE)
 library("Hmisc")
@@ -70,11 +70,12 @@ boxplot(Оборачиваемость.активов ~ Банкрот , data = 
 #сбалансированно бьем выборку на тестовую и проверочную
 ind1 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==1, select=ID: Банкрот)
 ind0 <- subset(bankruptcy, bankruptcy[,"Банкрот"]==0, select=ID: Банкрот)
-sampind1 <- ind1[sample(1:nrow(ind1), 53, replace=FALSE),]
-sampind0 <- ind0[sample(1:nrow(ind0), 158, replace=FALSE),]
+sampind1 <- ind1[sample(1:nrow(ind1), 0.8*nrow(ind1), replace=FALSE),]
+sampind0 <- ind0[sample(1:nrow(ind0), 0.8*nrow(ind0), replace=FALSE),]
 
 training_data <- rbind(sampind0, sampind1)
 testing_data <- bankruptcy[!(bankruptcy$ID %in% training_data$ID),]
+training_data <- bankruptcy[!(bankruptcy$ID %in% testing_data$ID),]
 rownames(training_data)<-NULL
 rownames(testing_data)<-NULL
 rm(ind0, ind1, sampind0, sampind1, i)

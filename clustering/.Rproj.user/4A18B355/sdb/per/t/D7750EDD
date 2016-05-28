@@ -1,0 +1,22 @@
+{
+    "contents" : "",
+    "created" : 1429162119587.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D7750EDD",
+    "lastKnownWriteTime" : 6878243912925736704,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "caption" : "nlschools",
+        "contentUrl" : "content?title=nlschools&file=a9cf42449df54177a240d37b2473f689.htm",
+        "displayedObservations" : 1000,
+        "displayedVariables" : 6,
+        "totalObservations" : 2287,
+        "variables" : 6
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

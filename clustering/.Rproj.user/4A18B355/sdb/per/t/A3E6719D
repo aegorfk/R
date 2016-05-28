@@ -1,0 +1,17 @@
+{
+    "contents" : "install.packages('devtools')\ndevtools::install_github('rstudio/shinyapps')\nshinyapps::setAccountInfo(name='dmitrii', token='FEA9FD65A9E8820857779B37463B9D59', secret='VNL9sFMPmLb/07TD2t0HiVwH2Ryj0dTJ/JFYikd6')\nlibrary(shinyapps)\ninstall.packages(c('ggplot2', 'shiny'))\n",
+    "created" : 1428936390087.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1677357696",
+    "id" : "A3E6719D",
+    "lastKnownWriteTime" : 1428936583,
+    "path" : "~/R/clustering/settings.R",
+    "project_path" : "settings.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
